@@ -1,0 +1,12 @@
+Implement the four stages of Monte Carlo Tree Search via recurrence:
+Select/expansion is fused to a call of root node to rollout.
+For each node, if it has children, choose one of its children according to certain policy, then call select/expansion on it;
+if it does not, generate children of it, choose one (or more) of them, then simulate.
+During simulation, a game is played till it ends, and the result returns.
+The return value is then used for backpropagation.
+
+In other words, a single polymorphic function, rollout, is called on root node, which will return the result of next rollout of given node.
+This function performs selection on non-leaf nodes, and expansion on leaf nodes, and simulation on newly generated nodes.
+In all cases, the result of one new random rollout is returned (as backpropagation) to update the tree.
+
+The policy for choosing nodes is to choose one node which has the larges value of Upper Confidence Bound (UCT).
