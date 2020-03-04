@@ -16,7 +16,7 @@ extern "C" {
 struct CheckerPosition
 {
   // The side initially on the lower and upper part of board
-  uint64_t down, up;
+  uint64_t down, up, king;
   // Number of plies already played. Starting position is 0
   int ply_count;
 };
