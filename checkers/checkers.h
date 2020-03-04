@@ -8,7 +8,8 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-
+#include "checker_engine.h"
+#include "checker_util.h"
 ////////////////////////////////////Classes/////////////////////////////////////
 // Any point between a gameplay
 // CheckerPosition class is dedicated to 8x8 checkerboard, where the player on
