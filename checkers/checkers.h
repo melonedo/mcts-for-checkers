@@ -8,8 +8,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include "checker_engine.h"
-#include "checker_util.h"
+
 ////////////////////////////////////Classes/////////////////////////////////////
 // Any point between a gameplay
 // CheckerPosition class is dedicated to 8x8 checkerboard, where the player on
@@ -58,6 +57,9 @@ ckr_pos ckr_get_pos(ckr_eng, int ind);
 // that the piece passes
 // Note: return a pointer to internal buffer, do not free it.
 ckr_mov ckr_parse_move(ckr_eng, const ckr_pos *old, const ckr_pos *new);
+
+#include "checker_engine.h"
+#include "checker_util.h"
 
 #ifdef __cplusplus
 }
