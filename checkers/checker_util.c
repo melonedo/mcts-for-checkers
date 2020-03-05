@@ -53,6 +53,12 @@ int ckr_index(uint64_t x)
 {
   return __builtin_ctzll(x);
 }
+
+int ckr_popcount(uint64_t x)
+{
+  return __builtin_popcountll(x);
+}
+
 #ifdef __cplusplus
 }
 #endif

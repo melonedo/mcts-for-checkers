@@ -18,7 +18,7 @@ extern "C" {
 
 // Helper functions dealing with 4 directions
 // The order of directions is ul, ur, dl, ur
-enum {ckr_dir_ul = 0, ckr_dir_ur, ckr_dir_dl, ckr_dir_ur};
+enum {ckr_dir_ul = 0, ckr_dir_ur, ckr_dir_dl, ckr_dir_dr};
 uint64_t ckr_shift_ul(uint64_t);
 uint64_t ckr_shift_ur(uint64_t);
 uint64_t ckr_shift_dl(uint64_t);
@@ -33,6 +33,9 @@ uint64_t ckr_ls1b(uint64_t);
 
 // Get the index of least significant bit
 int ckr_index(uint64_t);
+
+// Population count, count 1 bits
+int ckr_popcount(uint64_t);
 #ifdef __cplusplus
 }
 #endif

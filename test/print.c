@@ -1,6 +1,7 @@
 
 #include "print.h"
 #include <stdio.h>
+#include <assert.h>
 
 void print_position(const struct CheckerPosition *pos)
 {
@@ -24,5 +25,15 @@ void print_position(const struct CheckerPosition *pos)
       printf("bb");
     else
       printf("..");
+  }
+  putchar('\n');
+}
+
+void print_move(const char *move)
+{
+  while (*move)
+  {
+    printf("%d,%d ", *move / 8, *move % 8);
+    move++;
   }
 }

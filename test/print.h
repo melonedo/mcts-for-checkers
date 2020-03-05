@@ -11,5 +11,10 @@
 // One line title indicates the ply count
 void print_position(const struct CheckerPosition *);
 
+// Print parameter as a checker move
+// Indices are translated to the format row,column (0-indexed)
+// No \n is printed
+void print_move(const char *);
+
 
 #endif
