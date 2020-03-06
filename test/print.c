@@ -37,3 +37,38 @@ void print_move(const char *move)
     move++;
   }
 }
+
+// Append space_num spaces before printing the tree
+void print_tree_iter(const struct CheckerTree *, int space_num);
+void print_tree(const struct CheckerTree *t)
+{
+  print_tree_iter(t, 0);
+}
+
+void print_tree_iter(const struct CheckerTree *t, int space_num)
+{
+  int len = snprintf(NULL, 0, "%d/%d - ", t->win_num / 2, t->total_num / 2);
+  printf("%d/%d - ", t->win_num / 2, t->total_num / 2);
+  space_num += len;
+
+  if (t->child_num > 0)
+  {
+    bool is_first = true;
+    for (int i = 0; i < t->child_num; i++)
+    {
+      if (t->children[i].total_num <= 200)
+        continue;
+      if (is_first)
+      {
+        is_first = false;
+      }
+      else
+      {
+        putchar('\n');
+        for (int i = 0; i < space_num; i++)
+        putchar(' ');
+      }
+      print_tree_iter(&t->children[i], space_num);
+    }
+  }
+}

@@ -3,23 +3,24 @@
 extern "C" {
 #endif
 #include "tree.h"
-#include "../checkers.h"
+#include "../checkers/checkers.h"
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 bool mcts_is_leaf(ckr_tree t)
 {
-  return t.child_num <= 0;
+  return t->child_num <= 0;
 }
 
 enum CheckerLeafType mcts_leaf_type(ckr_tree t)
 {
-  return t.child_num;
+  return t->child_num;
 }
 
 ckr_tree mcts_get_child(ckr_tree t, int ind)
 {
-  return &t->children[i];
+  return &t->children[ind];
 }
 
 int mcts_retrive(ckr_tree t)
@@ -32,7 +33,7 @@ double mcts_win_freq(ckr_tree t)
   return (double)t->win_num / (double)t->total_num;
 }
 
-int mcts_rollout(ckr_tree t)
+int mcts_rollout_num(ckr_tree t)
 {
   return t->total_num / 2;
 }
@@ -43,7 +44,7 @@ void mcts_free(ckr_tree t)
   {
     for (int i = 0; i < t->child_num; i++)
     {
-      mcts_free(t->children[i]);
+      mcts_free(&t->children[i]);
     }
     free(t->children);
   }
@@ -51,7 +52,7 @@ void mcts_free(ckr_tree t)
 
 ckr_tree mcts_root(void)
 {
-  ckr_tree t = malloc(sizeof *t);
+  ckr_tree t = calloc(1, sizeof *t);
   t->child_num = MCTS_NEW_LEAF;
   t->pos = ckr_starting_pos();
   return t;
@@ -68,6 +69,7 @@ int mcts_rollout(ckr_tree t)
   {
     switch (mcts_leaf_type(t)) {
       case MCTS_NEW_LEAF:
+      t->child_num = MCTS_OLD_LEAF;
       res = mcts_simulate(t);
       break;
 
@@ -83,6 +85,9 @@ int mcts_rollout(ckr_tree t)
       case MCTS_END_GAME:
       res = mcts_retrive(t);
       break;
+
+      default:
+      assert(0);
     }
   }
 
@@ -97,10 +102,10 @@ void mcts_random_permute(int *arr, int len)
 {
   for (int i = 0; i < len; i++)
   {
-    arr = i;
+    arr[i] = i;
   }
 
-  for (int i = n-1; i >= 0; i--)
+  for (int i = len-1; i >= 0; i--)
   {
     int j = rand() % (i + 1);
     int temp = arr[i];
@@ -112,30 +117,37 @@ void mcts_random_permute(int *arr, int len)
 // Positive if lower wins, negative if upper wins, 0 if draw
 int mcts_end_game_count(const struct CheckerPosition *pos)
 {
-  return ckr_popcount(pos->down) - ckr_popcount(pos->up) + 3 *
+  int res = ckr_popcount(pos->down) - ckr_popcount(pos->up) + 3 *
     (ckr_popcount(pos->down & pos->king) - ckr_popcount(pos->up & pos->king));
+  if (res > 0)
+    return 1;
+  else if (res < 0)
+    return -1;
+  else
+    return 0;
 }
 
 void mcts_expand(ckr_tree t)
 {
-  if (t->ply_count >= 120)
+  if (t->pos.ply_count >= 120)
   {
-    int res = mcts_end_game_count(t->pos);
+    int res = mcts_end_game_count(&t->pos);
     t->child_num = MCTS_END_GAME;
     t->total_num = 2;
     t->win_num = 1 + res;
   }
   else
   {
-    ckr_parse_pos(eng, t->pos);
+    static struct CheckerEngine eng_, *eng = &eng_;
+    ckr_parse_pos(eng, &t->pos);
     int len = ckr_move_num(eng);
     if (len)
     {
-      static struct CheckerEngine eng_, *eng = &eng_;
       // A random order of 0..len-1, used to fill the children randomly
       int perm[len];
       mcts_random_permute(perm, len);
-      t->children = malloc(len * sizeof(struct CheckerTree));
+      t->children = calloc(len, sizeof(struct CheckerTree));
+      t->child_num = len;
 
       for (int i = 0; i < len; i++)
       {
@@ -145,10 +157,10 @@ void mcts_expand(ckr_tree t)
     }
     else
     {
-      int res = mcts_end_game_count(t->pos);
+      int res = mcts_end_game_count(&t->pos);
       t->child_num = MCTS_END_GAME;
       t->total_num = 2;
-      t->win_num = 1 + (t->ply_count % 2 != 0 ? -res : res);
+      t->win_num = 1 + (t->pos.ply_count % 2 != 0 ? -res : res);
     }
   }
 }
@@ -171,7 +183,7 @@ int mcts_simulate(ckr_tree t)
     }
   }
 
-  int res = mcts_end_game_count(t->pos);
+  int res = mcts_end_game_count(&t->pos);
   return t->pos.ply_count % 2 != 0 ? -res : res;
 }
 
@@ -183,10 +195,16 @@ int mcts_select(ckr_tree t)
   {
     if (mcts_leaf_type(mcts_get_child(t, i)) == MCTS_NEW_LEAF)
       return i;
-    else if (mcts_evaluate(t, i) > maxv)
+    else
     {
-        maxi = i;
+      double eval = mcts_evaluate(t, i);
+      if (eval > maxv)
+      {
+          maxi = i;
+          maxv = eval;
+      }
     }
+
   }
   return maxi;
 }

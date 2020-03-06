@@ -16,5 +16,9 @@ void print_position(const struct CheckerPosition *);
 // No \n is printed
 void print_move(const char *);
 
-
+// Print the game tree
+// Format:
+// 500/1000 - 100/300
+//          - 200/700
+void print_tree(const struct CheckerTree *);
 #endif

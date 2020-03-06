@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include "../checkers/checkers.h"
+#include "../mcts/mcts.h"
 #include "print.h"
 #include "../checkers/checker_util.c"
 #include "../checkers/checker_engine.c"

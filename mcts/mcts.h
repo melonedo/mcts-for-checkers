@@ -20,6 +20,7 @@ int mcts_rollout(ckr_tree);
 // Deallocate the tree
 void mcts_free(ckr_tree);
 
+#include "tree.h"
 #ifdef __cplusplus
 }
 #endif
