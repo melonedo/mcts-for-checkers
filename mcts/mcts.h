@@ -18,7 +18,7 @@ ckr_tree mcts_root(void);
 int mcts_rollout(ckr_tree);
 
 // Deallocate the tree
-void mcts(ckr_tree);
+void mcts_free(ckr_tree);
 
 #ifdef __cplusplus
 }
