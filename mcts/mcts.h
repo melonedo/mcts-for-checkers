@@ -20,6 +20,10 @@ int mcts_rollout(ckr_tree);
 // Deallocate the tree
 void mcts_free(ckr_tree);
 
+// Return the best move serialized (in internal buffer)
+// Free other branches
+const char *mcts_extract_best(ckr_tree);
+
 #include "tree.h"
 #ifdef __cplusplus
 }

@@ -8,19 +8,20 @@
 #include "print.c"
 
 #include <time.h>
-
+#include <inttypes.h>
 int main()
 {
   struct CheckerTree *tree = mcts_root();
   srand(12345);
   clock_t start = clock();
-  for (int i = 0; i < 1000000; i++)
+  for (int i = 0; i < 100000; i++)
   {
     mcts_rollout(tree);
     // printf("%d ", tree->win_num);
   }
-  printf("%lldms\n", clock() - start);
+  printf("%ldms\n", clock() - start);
+  print_move(mcts_extract_best(tree));
+  putchar('\n');
   print_tree(tree);
   getchar();
-  mcts_free(tree);
 }

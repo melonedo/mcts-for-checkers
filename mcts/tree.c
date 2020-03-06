@@ -88,6 +88,7 @@ int mcts_rollout(ckr_tree t)
 
       default:
       assert(0);
+      __builtin_unreachable();
     }
   }
 
@@ -215,6 +216,36 @@ double mcts_evaluate(ckr_tree t, int ind)
   ckr_tree child = mcts_get_child(t, ind);
   return mcts_win_freq(child) +
     sqrt(2 * log(mcts_rollout_num(t)) / mcts_rollout_num(child));
+}
+
+const char *mcts_extract_best(ckr_tree t)
+{
+  ckr_tree best = NULL;
+  double best_freq = -1.0;
+  for (int i = 0; i < t->child_num; i++)
+  {
+    if (mcts_win_freq(mcts_get_child(t, i)) > best_freq)
+    {
+      best_freq = mcts_win_freq(mcts_get_child(t, i));
+      best = mcts_get_child(t, i);
+    }
+  }
+  for (int i = 0; i < t->child_num; i++)
+  {
+    if (mcts_get_child(t, i) != best)
+    {
+      mcts_free(mcts_get_child(t, i));
+    }
+  }
+  static struct CheckerEngine eng;
+  const char *res = ckr_parse_move(&eng, &t->pos, &best->pos);
+
+  // Move best node to the place of the root
+  ckr_tree child_list = t->children;
+  *t = *best;
+  free(child_list);
+
+  return res;
 }
 
 #ifdef __cplusplus
