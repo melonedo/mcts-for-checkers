@@ -8,6 +8,8 @@ extern "C" {
 #include <math.h>
 #include <assert.h>
 
+static struct CheckerEngine eng_, *eng = &eng_;
+
 bool mcts_is_leaf(ckr_tree t)
 {
   return t->child_num <= 0;
@@ -139,7 +141,6 @@ void mcts_expand(ckr_tree t)
   }
   else
   {
-    static struct CheckerEngine eng_, *eng = &eng_;
     ckr_parse_pos(eng, &t->pos);
     int len = ckr_move_num(eng);
     if (len)
@@ -168,8 +169,6 @@ void mcts_expand(ckr_tree t)
 
 int mcts_simulate(ckr_tree t)
 {
-  static struct CheckerEngine eng_, *eng = &eng_;
-
   struct CheckerPosition pos = t->pos;
   while (pos.ply_count < 120)
   {
@@ -237,8 +236,7 @@ const char *mcts_extract_best(ckr_tree t)
       mcts_free(mcts_get_child(t, i));
     }
   }
-  static struct CheckerEngine eng;
-  const char *res = ckr_parse_move(&eng, &t->pos, &best->pos);
+  const char *res = ckr_parse_move(eng, &t->pos, &best->pos);
 
   // Move best node to the place of the root
   ckr_tree child_list = t->children;
