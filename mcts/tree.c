@@ -214,27 +214,34 @@ double mcts_evaluate(ckr_tree t, int ind)
 {
   // https://www.chessprogramming.org/UCT
   ckr_tree child = mcts_get_child(t, ind);
-  return mcts_win_freq(child) +
+  // Note that wins of the child are loses of the root
+  return -mcts_win_freq(child) +
     sqrt(2 * log(mcts_rollout_num(t)) / mcts_rollout_num(child));
 }
 
 const char *mcts_extract_best(ckr_tree t)
 {
-  int best = -1;
-  double best_freq = -1.0;
+  int best = -10000;
+  int best_num = 0;
   for (int i = 0; i < t->child_num; i++)
   {
-    if (mcts_win_freq(mcts_get_child(t, i)) > best_freq)
+    if (mcts_rollout_num(mcts_get_child(t, i)) > best_num)
     {
-      best_freq = mcts_win_freq(mcts_get_child(t, i));
+      best_num = mcts_rollout_num(mcts_get_child(t, i));
       best = i;
     }
   }
 
-  const char *res = ckr_parse_move(eng, &t->pos, &best->pos);
+  const char *res = ckr_parse_move(eng, &t->pos, &mcts_get_child(t, best)->pos);
 
-  mcts_free_except(t, best);
+  mcts_free_except_ind(t, best);
   return res;
+}
+
+bool ckr_equal(const struct CheckerPosition *l, const struct CheckerPosition *r)
+{
+  return l->up == r->up && l->down == r->down && l->king == r->king
+    && l->ply_count == r->ply_count;
 }
 
 void mcts_free_except(ckr_tree t, const struct CheckerPosition *pos)
@@ -244,7 +251,7 @@ void mcts_free_except(ckr_tree t, const struct CheckerPosition *pos)
   int chosen = -1;
   for (int i = 0; i < t->child_num; i++)
   {
-    if (memcmp(&mcts_get_child(t, i)->pos, pos, sizeof(*pos)) == 0)
+    if (ckr_equal(&mcts_get_child(t, i)->pos, pos))
     {
       if (chosen == -1 || mcts_rollout_num(mcts_get_child(t, i)) >
         mcts_rollout_num(mcts_get_child(t, chosen)))
@@ -266,10 +273,10 @@ void mcts_free_except_ind(ckr_tree t, int ind)
       mcts_free(mcts_get_child(t, i));
     }
   }
-  
+
   // Move best node to the place of the root
   ckr_tree child_list = t->children;
-  *t = *best;
+  *t = child_list[ind];
   free(child_list);
 
 }

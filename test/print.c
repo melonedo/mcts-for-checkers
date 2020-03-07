@@ -2,7 +2,7 @@
 #include "print.h"
 #include <stdio.h>
 #include <assert.h>
-
+int print_threshold = 100;
 void print_position(const struct CheckerPosition *pos)
 {
   printf("After %d plies: ", pos->ply_count);
@@ -43,6 +43,7 @@ void print_tree_iter(const struct CheckerTree *, int space_num);
 void print_tree(const struct CheckerTree *t)
 {
   print_tree_iter(t, 0);
+  putchar('\n');
 }
 
 void print_tree_iter(const struct CheckerTree *t, int space_num)
@@ -56,7 +57,7 @@ void print_tree_iter(const struct CheckerTree *t, int space_num)
     bool is_first = true;
     for (int i = 0; i < t->child_num; i++)
     {
-      if (t->children[i].total_num <= 200)
+      if (t->children[i].total_num <= 2 * print_threshold)
         continue;
       if (is_first)
       {
@@ -70,5 +71,16 @@ void print_tree_iter(const struct CheckerTree *t, int space_num)
       }
       print_tree_iter(&t->children[i], space_num);
     }
+  }
+}
+
+void print_mem(const void *m, int len)
+{
+  const unsigned char *mem = m;
+  for (int i = 0; i < len; i++)
+  {
+    if (i % 8 == 0)
+      printf(": ");
+    printf("%.2x ", mem[i]);
   }
 }

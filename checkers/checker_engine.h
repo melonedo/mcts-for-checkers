@@ -82,7 +82,7 @@ void ckr_ins_jump(ckr_eng, uint64_t my, uint64_t opn, int jump);
 bool ckr_parse_jump(ckr_eng, uint64_t piece, uint64_t opn);
 
 // Apply the given move
-ckr_pos ckr_apply_move(const ckr_pos *, const struct CheckerMove);
+ckr_pos ckr_apply_move(const ckr_pos *, const struct CheckerMove *);
 
 #ifdef __cplusplus
 }

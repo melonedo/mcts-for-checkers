@@ -21,4 +21,7 @@ void print_move(const char *);
 // 500/1000 - 100/300
 //          - 200/700
 void print_tree(const struct CheckerTree *);
+
+// Print the memory as-is
+void print_mem(const void *, int len);
 #endif

@@ -131,7 +131,7 @@ ckr_pos ckr_apply_move(const ckr_pos *pos, const struct CheckerMove *mov)
   return rval;
 }
 
-ckr_pos ckr_make_move(ckr_eng, const ckr_pos *pos, const char *mov)
+ckr_pos ckr_make_move(ckr_eng eng, const ckr_pos *pos, const char *mov)
 {
   struct CheckerMove c_mov = {};
   if (strlen(mov) == 2 && abs(mov[0] - mov[1]) <= 9)
@@ -145,11 +145,11 @@ ckr_pos ckr_make_move(ckr_eng, const ckr_pos *pos, const char *mov)
     c_mov.my = 1ull << mov[0];
     while (*++mov)
     {
-      c_mov.opn |= 1ull << (mov[0] - mov[-1]) / 2;
+      c_mov.opn |= 1ull << (mov[0] + mov[-1]) / 2;
     }
     c_mov.my ^= 1ull << mov[-1];
   }
-  return ckr_apply_move(pos, c_mov);
+  return ckr_apply_move(pos, &c_mov);
 }
 
 int ckr_move_num(ckr_eng eng)
