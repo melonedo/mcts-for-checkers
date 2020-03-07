@@ -21,7 +21,7 @@ int main()
 {
   srand(1234);
   struct CheckerTree *root = mcts_root();
-  print_threshold = 1000;
+  // print_threshold = 1000;
   loop(root);
 }
 
