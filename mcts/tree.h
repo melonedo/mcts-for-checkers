@@ -68,6 +68,9 @@ int mcts_child_num(ckr_tree);
 // Get the child with given index
 ckr_tree mcts_get_child(ckr_tree, int);
 
+// Free all other branches
+void mcts_free_except_ind(ckr_tree, int);
+
 #ifdef __cplusplus
 }
 #endif

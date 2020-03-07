@@ -56,8 +56,10 @@ ckr_pos ckr_get_pos(ckr_eng, int ind);
 // Return a null-terminated string of moves, representing successive squares
 // that the piece passes
 // Note: return a pointer to internal buffer, do not free it.
-ckr_mov ckr_parse_move(ckr_eng, const ckr_pos *old, const ckr_pos *new);
+const char *ckr_parse_move(ckr_eng, const ckr_pos *old, const ckr_pos *new);
 
+// Make a move according to given string of moves
+ckr_pos ckr_make_move(ckr_eng, const ckr_pos *, const char *);
 #include "checker_engine.h"
 #include "checker_util.h"
 

@@ -17,8 +17,8 @@ ckr_tree mcts_root(void);
 // 1, 0, -1 for win, draw, lose each
 int mcts_rollout(ckr_tree);
 
-// Deallocate the tree
-void mcts_free(ckr_tree);
+// Deallocate the tree, leaving only the given branch
+void mcts_free_except(ckr_tree, const struct CheckerPosition *);
 
 // Return the best move serialized (in internal buffer)
 // Free other branches

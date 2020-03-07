@@ -7,6 +7,7 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <string.h>
 
 static struct CheckerEngine eng_, *eng = &eng_;
 
@@ -219,31 +220,58 @@ double mcts_evaluate(ckr_tree t, int ind)
 
 const char *mcts_extract_best(ckr_tree t)
 {
-  ckr_tree best = NULL;
+  int best = -1;
   double best_freq = -1.0;
   for (int i = 0; i < t->child_num; i++)
   {
     if (mcts_win_freq(mcts_get_child(t, i)) > best_freq)
     {
       best_freq = mcts_win_freq(mcts_get_child(t, i));
-      best = mcts_get_child(t, i);
+      best = i;
     }
   }
+
+  const char *res = ckr_parse_move(eng, &t->pos, &best->pos);
+
+  mcts_free_except(t, best);
+  return res;
+}
+
+void mcts_free_except(ckr_tree t, const struct CheckerPosition *pos)
+{
+  // Be aware of that sometimes there are identical positions
+  // In that case, leave the most visited branch
+  int chosen = -1;
   for (int i = 0; i < t->child_num; i++)
   {
-    if (mcts_get_child(t, i) != best)
+    if (memcmp(&mcts_get_child(t, i)->pos, pos, sizeof(*pos)) == 0)
+    {
+      if (chosen == -1 || mcts_rollout_num(mcts_get_child(t, i)) >
+        mcts_rollout_num(mcts_get_child(t, chosen)))
+      {
+        chosen = i;
+      }
+    }
+  }
+  assert(chosen != -1);
+  mcts_free_except_ind(t, chosen);
+}
+
+void mcts_free_except_ind(ckr_tree t, int ind)
+{
+  for (int i = 0; i < t->child_num; i++)
+  {
+    if (i != ind)
     {
       mcts_free(mcts_get_child(t, i));
     }
   }
-  const char *res = ckr_parse_move(eng, &t->pos, &best->pos);
-
+  
   // Move best node to the place of the root
   ckr_tree child_list = t->children;
   *t = *best;
   free(child_list);
 
-  return res;
 }
 
 #ifdef __cplusplus

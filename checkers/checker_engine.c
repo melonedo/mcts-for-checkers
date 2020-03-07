@@ -5,6 +5,8 @@ extern "C" {
 #endif
 
 #include "checker_engine.h"
+#include <stdlib.h>
+#include <string.h>
 
 #define CHECKER_ILLEGAL_SQUARE 0xAA55AA55AA55AA55ull
 #define CHECKER_LEGAL_SQUARE ~0xAA55AA55AA55AA55ull
@@ -76,6 +78,8 @@ void ckr_parse_pos(ckr_eng eng, const ckr_pos *pos)
 
 ckr_pos ckr_get_pos(ckr_eng eng, int ind)
 {
+  // Because ckr_eng does not actually carry a ckr_pos, I do not want to
+  // call ckr_apply_move here
   ckr_pos rval;
   uint64_t my = eng->move_list[ind].my, opn = eng->move_list[ind].opn;
   if (eng->is_up)
@@ -99,6 +103,53 @@ ckr_pos ckr_get_pos(ckr_eng eng, int ind)
 
   rval.ply_count = eng->ply_count;
   return rval;
+}
+
+ckr_pos ckr_apply_move(const ckr_pos *pos, const struct CheckerMove *mov)
+{
+  ckr_pos rval;
+  if (pos->ply_count % 2 != 0)
+  {
+    rval.up = pos->up ^ mov->my;
+    rval.down = pos->down ^ mov->opn;
+  }
+  else
+  {
+    rval.down = pos->down ^ mov->my;
+    rval.up = pos->up ^ mov->opn;
+  }
+
+  // Take care of kings
+  if (mov->my & pos->king)
+    rval.king = mov->my ^ pos->king;
+  else if (pos->ply_count % 2 != 0)
+    rval.king = pos->king | (mov->my & 0x5500000000000000ull);
+  else
+    rval.king = pos->king | (mov->my & 0x00000000000000AAull);
+
+  rval.ply_count = pos->ply_count + 1;
+  return rval;
+}
+
+ckr_pos ckr_make_move(ckr_eng, const ckr_pos *pos, const char *mov)
+{
+  struct CheckerMove c_mov = {};
+  if (strlen(mov) == 2 && abs(mov[0] - mov[1]) <= 9)
+  {
+    // Walk
+    c_mov.my = 1ull << mov[0] | 1ull << mov[1];
+  }
+  else
+  {
+    // Jump
+    c_mov.my = 1ull << mov[0];
+    while (*++mov)
+    {
+      c_mov.opn |= 1ull << (mov[0] - mov[-1]) / 2;
+    }
+    c_mov.my ^= 1ull << mov[-1];
+  }
+  return ckr_apply_move(pos, c_mov);
 }
 
 int ckr_move_num(ckr_eng eng)
