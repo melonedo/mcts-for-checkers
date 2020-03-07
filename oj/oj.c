@@ -83,8 +83,9 @@ void turn(struct CheckerTree *t)
 
   const char *mov = mcts_extract_best(t);
   printf("%ldms\n", clock() - start);
-  printf("%zd ", strlen(mov));
-  print_move(mov);
+  printf("%zd", strlen(mov));
+  for (int i = 0; mov[i]; i++)
+    printf(" %d,%d", mov[i] / 8, mov[i] % 8);
   putchar('\n');
 }
 
