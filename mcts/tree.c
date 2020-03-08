@@ -28,7 +28,12 @@ ckr_tree mcts_get_child(ckr_tree t, int ind)
 
 int mcts_retrive(ckr_tree t)
 {
-  return t->win_num - 1;
+  if (t->win_num == 0)
+    return -1;
+  else if (t->win_num == t->child_num)
+    return 1;
+  else
+    return 0;
 }
 
 double mcts_win_freq(ckr_tree t)
@@ -222,12 +227,12 @@ double mcts_evaluate(ckr_tree t, int ind)
 const char *mcts_extract_best(ckr_tree t)
 {
   int best = -10000;
-  int best_num = 0;
+  double best_num = 1.0;
   for (int i = 0; i < t->child_num; i++)
   {
-    if (mcts_rollout_num(mcts_get_child(t, i)) > best_num)
+    if (mcts_win_freq(mcts_get_child(t, i)) < best_num)
     {
-      best_num = mcts_rollout_num(mcts_get_child(t, i));
+      best_num = mcts_win_freq(mcts_get_child(t, i));
       best = i;
     }
   }
