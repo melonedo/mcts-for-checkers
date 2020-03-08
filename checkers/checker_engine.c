@@ -95,7 +95,7 @@ ckr_pos ckr_get_pos(ckr_eng eng, int ind)
 
   // Take care of kings
   if (my & eng->king)
-    rval.king = my ^ eng->king;
+    rval.king = my ^ eng->king & ~opn;
   else if (eng->is_up)
     rval.king = eng->king | (rval.up & 0x5500000000000000ull);
   else
@@ -121,7 +121,7 @@ ckr_pos ckr_apply_move(const ckr_pos *pos, const struct CheckerMove *mov)
 
   // Take care of kings
   if (mov->my & pos->king)
-    rval.king = mov->my ^ pos->king;
+    rval.king = mov->my ^ pos->king & ~mov->opn;
   else if (pos->ply_count % 2 != 0)
     rval.king = pos->king | (rval.up & 0x5500000000000000ull);
   else
