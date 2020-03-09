@@ -229,8 +229,8 @@ double mcts_evaluate(ckr_tree t, int ind)
 
 const char *mcts_extract_best(ckr_tree t)
 {
-  int best = -10000;
-  double best_num = 1.0;
+  int best = -1;
+  double best_num = 1000;
   for (int i = 0; i < t->child_num; i++)
   {
     if (mcts_win_freq(mcts_get_child(t, i)) < best_num)
