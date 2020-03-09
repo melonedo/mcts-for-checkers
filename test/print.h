@@ -18,8 +18,8 @@ void print_move(const char *);
 
 // Print the game tree
 // Format:
-// 500/1000 - 100/300
-//          - 200/700
+// 500/1000 - [5,6 4,5]100/300
+//          - [3,5 3,6]200/700
 void print_tree(const struct CheckerTree *);
 
 // Print the memory as-is

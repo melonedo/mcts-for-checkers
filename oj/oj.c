@@ -28,7 +28,7 @@ void *search(void *);
 
 int main()
 {
-  srand(1234);
+  srand(12345679);
   struct CheckerTree *root = mcts_root();
   pthread_mutex_init(&game_tree_mutex, NULL);
   pthread_create(&search_thread, NULL, search, root);
@@ -55,10 +55,10 @@ void loop(struct CheckerTree *t)
       turn(t);
       break;
     }
-    printf("DEBUG [%s] %d of %d, %f%%\n", buf,
-    t->win_num / 2, t->total_num / 2, 100*(1.0-1.0*t->win_num/t->total_num));
-    // print_position(&t->pos);
-    fflush(stdout);
+    // printf("DEBUG turn #%d [%s] %d of %d, %f%%\n", t->pos.ply_count, buf,
+    // -t->win_num, t->total_num / 2, -100.0 * t->win_num / t->total_num);
+    // // print_position(&t->pos);
+    // fflush(stdout);
   }
 }
 
@@ -76,10 +76,16 @@ void place(struct CheckerTree *t)
   }
   static struct CheckerEngine eng_, *eng = &eng_;
   pthread_mutex_lock(&game_tree_mutex);
+  // Record
+  printf("DEBUG X %d PLACE %d", mcts_rollout_num(t), len);
+  for (int i = 0; mov[i]; i++)
+    printf(" %d,%d", mov[i] / 8, mov[i] % 8);
+  putchar('\n');
+
   struct CheckerPosition pos = ckr_make_move(eng, &t->pos, mov);
-  // print_move(mov);putchar('\n');
-  // print_tree(t);
   mcts_free_except(t, &pos);
+  printf("DEBUG turn #%d %d/%d, %f%% winning\n", t->pos.ply_count,
+  t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
   pthread_mutex_unlock(&game_tree_mutex);
   // print_tree(t);
 }
@@ -87,7 +93,7 @@ void place(struct CheckerTree *t)
 void turn(struct CheckerTree *t)
 {
   // Do not explicitly search, simply wait
-  clock_t end = clock();
+  clock_t end = clock(), start = end;
   if (t->pos.ply_count > 90)
   {
     end += 1000;
@@ -101,12 +107,16 @@ void turn(struct CheckerTree *t)
     Sleep(10);
   }
   pthread_mutex_lock(&game_tree_mutex);
+  // Record
+  printf("DEBUG X %d TURN\n", mcts_rollout_num(t));
   const char *mov = mcts_extract_best(t);
   printf("DEBUG %ldms\n", clock() - start);
   printf("%d", strlen(mov));
   for (int i = 0; mov[i]; i++)
     printf(" %d,%d", mov[i] / 8, mov[i] % 8);
   putchar('\n');
+  printf("DEBUG turn #%d %d/%d, %f%% losing\n", t->pos.ply_count,
+  t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
   fflush(stdout);
   pthread_mutex_unlock(&game_tree_mutex);
 }

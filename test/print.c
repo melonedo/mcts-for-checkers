@@ -48,8 +48,24 @@ void print_tree(const struct CheckerTree *t)
 
 void print_tree_iter(const struct CheckerTree *t, int space_num)
 {
+  static struct CheckerEngine e;
+  const char *buf = e.move_str_buf;
+  if (space_num != 0)
+  {
+    putchar('[');
+    for (int i = 0; buf[i]; i++)
+    {
+      if (i != 0)
+      {
+        putchar(' ');
+      }
+      printf("%d,%d", buf[i] / 8, buf[i] % 8);
+    }
+    putchar(']');
+    space_num += 2 + strlen(buf) * 4 - 1;
+  }
   int len = snprintf(NULL, 0, "%d/%d - ", t->win_num / 2, t->total_num / 2);
-  printf("%d/%d - ", t->win_num / 2, t->total_num / 2);
+  printf("%d/%d - ", t->win_num, t->total_num / 2);
   space_num += len;
 
   if (t->child_num > 0)
@@ -69,6 +85,7 @@ void print_tree_iter(const struct CheckerTree *t, int space_num)
         for (int i = 0; i < space_num; i++)
         putchar(' ');
       }
+      ckr_parse_move(&e, &t->pos, &t->children[i].pos);
       print_tree_iter(&t->children[i], space_num);
     }
   }
