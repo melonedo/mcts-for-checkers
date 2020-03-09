@@ -244,7 +244,9 @@ void ckr_gen_jump_backup(ckr_eng eng)
   while (b)
   {
     uint64_t ls1b = b & (-b);
+    eng->nocp ^= ls1b;
     ckr_gen_jump_piecewise(eng, 0, ls1b, eng->opn, ls1b);
+    eng->nocp ^= ls1b;
     b ^= ls1b;
   }
 }
