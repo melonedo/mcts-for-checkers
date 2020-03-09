@@ -12,8 +12,8 @@ struct CheckerTree
 {
   struct CheckerTree *children;
   int child_num;
-  // Twice the numbers of winning and total rollouts
-  // (to make room for draws)
+  // Twice the numbers of winning total rollouts
+  // And the difference between the numbers of winning moves and losing ones
   int win_num, total_num;
   // Position of current game
   struct CheckerPosition pos;
@@ -36,6 +36,7 @@ void mcts_expand(ckr_tree);
 
 // Evaluate the given node of a tree, here UCT (Upper Confidence bounds applied
 // to Trees) is used
+// Intergreated into mcts_select to avoid a few computation
 double mcts_evaluate(ckr_tree, int);
 
 // Next 3 methods below do not modify the tree

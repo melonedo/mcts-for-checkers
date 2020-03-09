@@ -28,10 +28,10 @@ ckr_tree mcts_get_child(ckr_tree t, int ind)
 
 int mcts_retrive(ckr_tree t)
 {
-  if (t->win_num == 0)
-    return -1;
-  else if (t->win_num == t->child_num)
+  if (t->win_num > 0)
     return 1;
+  else if (t->win_num < 0)
+    return -1;
   else
     return 0;
 }
@@ -102,7 +102,7 @@ int mcts_rollout(ckr_tree t)
 
   // Record the result
   t->total_num += 2;
-  t->win_num += 1 + res;
+  t->win_num += res;
   return res;
 }
 
@@ -197,13 +197,16 @@ int mcts_select(ckr_tree t)
 {
   double maxv = -1000;
   int maxi = 0;
+  // Natural logarithm of the number of rollouts of the parent node
+  double ln_par = log(mcts_rollout_num(t));
   for (int i = 0; i < t->child_num; i++)
   {
     if (mcts_leaf_type(mcts_get_child(t, i)) == MCTS_NEW_LEAF)
       return i;
     else
     {
-      double eval = mcts_evaluate(t, i);
+      double eval = -mcts_win_freq(mcts_get_child(t, i)) +
+        sqrt(2 * ln_par / mcts_rollout_num(mcts_get_child(t, i)));
       if (eval > maxv)
       {
           maxi = i;
