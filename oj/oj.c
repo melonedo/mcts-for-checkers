@@ -1,4 +1,4 @@
-int black_win = 0;
+
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
 #include "../test/print.h"
@@ -21,7 +21,7 @@ int main()
 {
   srand(1234);
   struct CheckerTree *root = mcts_root();
-  // print_threshold = 1000;
+  // print_threshold = 10000;
   loop(root);
 }
 
@@ -44,10 +44,10 @@ void loop(struct CheckerTree *t)
       turn(t);
       break;
     }
-    printf("DEBUG \"%s\" %.3lf%% of %d\n", buf,
-    100 - 100.0 * t->win_num / t->total_num,
-      t->total_num / 2);
+    printf("DEBUG [%s] %d of %d, %f%%\n", buf,
+    t->win_num / 2, t->total_num / 2, 100*(1.0-1.0*t->win_num/t->total_num));
     // print_position(&t->pos);
+    fflush(stdout);
   }
 }
 
@@ -82,8 +82,8 @@ void turn(struct CheckerTree *t)
   // print_tree(t);
 
   const char *mov = mcts_extract_best(t);
-  printf("%ldms\n", clock() - start);
-  printf("%zd", strlen(mov));
+  printf("DEBUG %ldms\n", clock() - start);
+  printf("%d", strlen(mov));
   for (int i = 0; mov[i]; i++)
     printf(" %d,%d", mov[i] / 8, mov[i] % 8);
   putchar('\n');
