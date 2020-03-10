@@ -1,0 +1,4 @@
+*.exe
+combined.c
+test/log.txt
+test/record.txt
