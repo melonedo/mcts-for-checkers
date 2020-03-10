@@ -2,6 +2,7 @@
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
 #include "../test/print.h"
+#include "../mcts/random.c"
 #include "../checkers/checker_util.c"
 #include "../checkers/checker_engine.c"
 #include "../test/print.c"
@@ -27,8 +28,8 @@ void turn(struct CheckerTree *);
 void *search(void *);
 
 int main()
-{
-  srand(12345679);
+{print_threshold = 5000;
+  // srand(12345679);
   struct CheckerTree *root = mcts_root();
   pthread_mutex_init(&game_tree_mutex, NULL);
   pthread_create(&search_thread, NULL, search, root);
@@ -109,6 +110,7 @@ void turn(struct CheckerTree *t)
   pthread_mutex_lock(&game_tree_mutex);
   // Record
   printf("DEBUG X %d TURN\n", mcts_rollout_num(t));
+  print_tree(t);
   const char *mov = mcts_extract_best(t);
   printf("DEBUG %ldms\n", clock() - start);
   printf("%d", strlen(mov));
