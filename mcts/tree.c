@@ -143,7 +143,7 @@ void mcts_expand(ckr_tree t)
     int res = mcts_end_game_count(&t->pos);
     t->child_num = MCTS_END_GAME;
     t->total_num = 2;
-    t->win_num = 1 + res;
+    t->win_num = res;
   }
   else
   {
@@ -168,7 +168,7 @@ void mcts_expand(ckr_tree t)
       int res = mcts_end_game_count(&t->pos);
       t->child_num = MCTS_END_GAME;
       t->total_num = 2;
-      t->win_num = 1 + (t->pos.ply_count % 2 != 0 ? -res : res);
+      t->win_num = t->pos.ply_count % 2 != 0 ? -res : res;
     }
   }
 }

@@ -28,7 +28,7 @@ void turn(struct CheckerTree *);
 void *search(void *);
 
 int main()
-{print_threshold = 5000;
+{
   // srand(12345679);
   struct CheckerTree *root = mcts_root();
   pthread_mutex_init(&game_tree_mutex, NULL);
@@ -97,7 +97,7 @@ void turn(struct CheckerTree *t)
   clock_t end = clock(), start = end;
   if (t->pos.ply_count > 90)
   {
-    end += 1000;
+    end += 900;
   }
   else
   {
@@ -110,7 +110,7 @@ void turn(struct CheckerTree *t)
   pthread_mutex_lock(&game_tree_mutex);
   // Record
   printf("DEBUG X %d TURN\n", mcts_rollout_num(t));
-  print_tree(t);
+  // print_tree(t);
   const char *mov = mcts_extract_best(t);
   printf("DEBUG %ldms\n", clock() - start);
   printf("%d", strlen(mov));

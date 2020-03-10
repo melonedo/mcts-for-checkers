@@ -18,10 +18,12 @@ void place(struct CheckerTree *);
 void turn(struct CheckerTree *);
 void wait(struct CheckerTree *);
 
+FILE *rec;
 int main()
 {
   // srand(12345679);
   struct CheckerTree *root = mcts_root();
+  assert(rec = fopen("../test/record.txt", "r"));
   loop(root);
 }
 
@@ -30,7 +32,7 @@ void loop(struct CheckerTree *t)
   while (true)
   {
     char buf[256];
-    scanf("%s", buf);
+    fscanf(rec, "%s", buf);
     switch (buf[0])
     {
       case 'P':
@@ -50,13 +52,13 @@ void loop(struct CheckerTree *t)
 void place(struct CheckerTree *t)
 {
   int len;
-  scanf("%d", &len);
+  fscanf(rec, "%d", &len);
   char mov[len + 1];
   mov[len] = 0;
   for (int i = 0; i < len; i++)
   {
     int row, col;
-    scanf("%d,%d", &row, &col);
+    fscanf(rec, "%d,%d", &row, &col);
     mov[i] = 8 * row + col;
   }
   printf("DEBUG X %d PLACE %d", mcts_rollout_num(t), len);
@@ -87,11 +89,11 @@ void turn(struct CheckerTree *t)
 void wait(struct CheckerTree *t)
 {
   int end_num;
-  scanf("%d", &end_num);
+  fscanf(rec, "%d", &end_num);
   while (mcts_rollout_num(t) < end_num)
   {
     mcts_rollout(t);
   }
   print_threshold = 5000;
-  print_tree(t);
+  // print_tree(t);
 }
