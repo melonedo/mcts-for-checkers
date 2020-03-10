@@ -64,7 +64,7 @@ void print_tree_iter(const struct CheckerTree *t, int space_num)
     putchar(']');
     space_num += 2 + strlen(buf) * 4 - 1;
   }
-  int len = snprintf(NULL, 0, "%d/%d - ", t->win_num / 2, t->total_num / 2);
+  int len = snprintf(NULL, 0, "%d/%d - ", t->win_num, t->total_num / 2);
   printf("%d/%d - ", t->win_num, t->total_num / 2);
   space_num += len;
 
