@@ -2,6 +2,7 @@
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
 #include "../test/print.h"
+#include "../mcts/random.c"
 #include "../checkers/checker_util.c"
 #include "../checkers/checker_engine.c"
 #include "../test/print.c"
@@ -19,7 +20,7 @@ void wait(struct CheckerTree *);
 
 int main()
 {
-  srand(12345679);
+  // srand(12345679);
   struct CheckerTree *root = mcts_root();
   loop(root);
 }
@@ -58,6 +59,10 @@ void place(struct CheckerTree *t)
     scanf("%d,%d", &row, &col);
     mov[i] = 8 * row + col;
   }
+  printf("DEBUG X %d PLACE %d", mcts_rollout_num(t), len);
+  for (int i = 0; mov[i]; i++)
+    printf(" %d,%d", mov[i] / 8, mov[i] % 8);
+  putchar('\n');
   static struct CheckerEngine eng_, *eng = &eng_;
   struct CheckerPosition pos = ckr_make_move(eng, &t->pos, mov);
   mcts_free_except(t, &pos);
@@ -68,6 +73,7 @@ void place(struct CheckerTree *t)
 
 void turn(struct CheckerTree *t)
 {
+  printf("DEBUG X %d TURN\n", mcts_rollout_num(t));
   const char *mov = mcts_extract_best(t);
   printf("%d", strlen(mov));
   for (int i = 0; mov[i]; i++)

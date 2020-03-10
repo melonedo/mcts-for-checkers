@@ -116,7 +116,7 @@ void mcts_random_permute(int *arr, int len)
 
   for (int i = len-1; i >= 0; i--)
   {
-    int j = rand() % (i + 1);
+    int j = msws() % (i + 1);
     int temp = arr[i];
     arr[i] = arr[j];
     arr[j] = temp;
@@ -181,7 +181,7 @@ int mcts_simulate(ckr_tree t)
     ckr_parse_pos(eng, &pos);
     if (ckr_move_num(eng) != 0)
     {
-      pos = ckr_get_pos(eng, rand() % ckr_move_num(eng));
+      pos = ckr_get_pos(eng, msws() % ckr_move_num(eng));
     }
     else
     {
