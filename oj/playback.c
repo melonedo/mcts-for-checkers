@@ -93,5 +93,5 @@ void wait(struct CheckerTree *t)
     mcts_rollout(t);
   }
   print_threshold = 5000;
-  print_tree(t);
+  // print_tree(t);
 }

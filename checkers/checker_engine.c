@@ -121,11 +121,12 @@ ckr_pos ckr_apply_move(const ckr_pos *pos, const struct CheckerMove *mov)
 
   // Take care of kings
   if (mov->my & pos->king)
-    rval.king = (mov->my ^ pos->king) & ~mov->opn;
+    rval.king = (mov->my ^ pos->king);
   else if (pos->ply_count % 2 != 0)
     rval.king = pos->king | (rval.up & 0x5500000000000000ull);
   else
     rval.king = pos->king | (rval.down & 0x00000000000000AAull);
+  rval.king &= ~mov->opn;
 
   rval.ply_count = pos->ply_count + 1;
   return rval;

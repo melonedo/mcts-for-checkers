@@ -48,6 +48,11 @@ void print_tree(const struct CheckerTree *t)
 
 void print_tree_iter(const struct CheckerTree *t, int space_num)
 {
+  if (space_num > 140)
+  {
+    printf("...");
+    return;
+  }
   static struct CheckerEngine e;
   const char *buf = e.move_str_buf;
   if (space_num != 0)
