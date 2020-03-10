@@ -5,7 +5,7 @@ files = [
     'checkers/checker_util.h',
     'mcts/mcts.h',
     'mcts/tree.h',
-    'mcts/random.c'
+    'mcts/random.c',
     'checkers/checker_util.c',
     'checkers/checker_engine.c',
     'mcts/tree.c',
