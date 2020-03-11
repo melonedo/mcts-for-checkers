@@ -51,7 +51,7 @@ void ckr_parse_pos(ckr_eng eng, const ckr_pos *pos)
       // Possible long jumps
       eng->jump_len = 1;
       // "Fast" version is implemented later
-      ckr_gen_jump_backup(eng);
+      ckr_gen_jump(eng);
     }
     else
     {
@@ -78,80 +78,78 @@ void ckr_parse_pos(ckr_eng eng, const ckr_pos *pos)
 
 ckr_pos ckr_get_pos(ckr_eng eng, int ind)
 {
-  // Because ckr_eng does not actually carry a ckr_pos, I do not want to
-  // call ckr_apply_move here
-  ckr_pos rval;
-  uint64_t my = eng->move_list[ind].my, opn = eng->move_list[ind].opn;
   if (eng->is_up)
   {
-    rval.up = eng->my ^ my;
-    rval.down = eng->opn ^ opn;
+    return ckr_apply_move(eng->opn, eng->my, eng->king, eng->move_list[ind].opn,
+      eng->move_list[ind].my, eng->ply_count, true);
   }
   else
   {
-    rval.down = eng->my ^ my;
-    rval.up = eng->opn ^ opn;
+    return ckr_apply_move(eng->my, eng->opn, eng->king, eng->move_list[ind].my,
+      eng->move_list[ind].opn, eng->ply_count, false);
   }
-
-  // Take care of kings
-  if (my & eng->king)
-    rval.king = (my ^ eng->king);
-  else if (eng->is_up)
-    rval.king = eng->king | (rval.up & 0x5500000000000000ull);
-  else
-    rval.king = eng->king | (rval.down & 0x00000000000000AAull);
-  rval.king &= ~opn;
-
-  rval.ply_count = eng->ply_count;
-  return rval;
 }
 
-ckr_pos ckr_apply_move(const ckr_pos *pos, const struct CheckerMove *mov)
+static inline ckr_pos ckr_apply_move(
+  uint64_t old_down, uint64_t old_up, uint64_t old_king,
+  uint64_t mov_down, uint64_t mov_up, int new_ply_count, bool is_up)
 {
   ckr_pos rval;
-  if (pos->ply_count % 2 != 0)
-  {
-    rval.up = pos->up ^ mov->my;
-    rval.down = pos->down ^ mov->opn;
-  }
-  else
-  {
-    rval.down = pos->down ^ mov->my;
-    rval.up = pos->up ^ mov->opn;
-  }
+  rval.down = old_down ^ mov_down;
+  rval.up = old_up ^ mov_up;
+  rval.ply_count = new_ply_count;
+  rval.king = old_king;
 
   // Take care of kings
-  if (mov->my & pos->king)
-    rval.king = (mov->my ^ pos->king);
-  else if (pos->ply_count % 2 != 0)
-    rval.king = pos->king | (rval.up & 0x5500000000000000ull);
+  if (is_up)
+  {
+    if (mov_up & old_king)
+      rval.king ^= mov_up;
+    else
+      rval.king |= (rval.up & 0xff00000000000000ull);
+    rval.king &= ~mov_down;
+  }
   else
-    rval.king = pos->king | (rval.down & 0x00000000000000AAull);
-  rval.king &= ~mov->opn;
+  {
+    if (mov_down & old_king)
+      rval.king ^= mov_down;
+    else
+      rval.king |= (rval.down & 0x00000000000000ffull);
+    rval.king &= ~mov_up;
+  }
 
-  rval.ply_count = pos->ply_count + 1;
   return rval;
 }
 
-ckr_pos ckr_make_move(ckr_eng eng, const ckr_pos *pos, const char *mov)
+ckr_pos ckr_make_move(ckr_eng eng, const ckr_pos *pos, const char *mov_str)
 {
-  struct CheckerMove c_mov = {};
-  if (strlen(mov) == 2 && abs(mov[0] - mov[1]) <= 9)
+  struct CheckerMove mov = {};
+  if (strlen(mov_str) == 2 && abs(mov_str[0] - mov_str[1]) <= 9)
   {
     // Walk
-    c_mov.my = 1ull << mov[0] | 1ull << mov[1];
+    mov.my = 1ull << mov_str[0] | 1ull << mov_str[1];
   }
   else
   {
     // Jump
-    c_mov.my = 1ull << mov[0];
-    while (*++mov)
+    mov.my = 1ull << mov_str[0];
+    while (*++mov_str)
     {
-      c_mov.opn |= 1ull << (mov[0] + mov[-1]) / 2;
+      mov.opn |= 1ull << (mov_str[0] + mov_str[-1]) / 2;
     }
-    c_mov.my ^= 1ull << mov[-1];
+    mov.my ^= 1ull << mov_str[-1];
   }
-  return ckr_apply_move(pos, &c_mov);
+
+  if (pos->ply_count % 2 != 0)
+  {
+    return ckr_apply_move(pos->down, pos->up, pos->king, mov.opn, mov.my,
+      pos->ply_count + 1, true);
+  }
+  else
+  {
+    return ckr_apply_move(pos->down, pos->up, pos->king, mov.my, mov.opn,
+      pos->ply_count + 1, false);
+  }
 }
 
 int ckr_move_num(ckr_eng eng)
@@ -240,12 +238,13 @@ ckr_pos ckr_starting_pos()
   return rval;
 }
 
-void ckr_gen_jump_backup(ckr_eng eng)
+void ckr_gen_jump(ckr_eng eng)
 {
   uint64_t b = eng->jmp_my;
   while (b)
   {
     uint64_t ls1b = b & (-b);
+    // Temporarily remove this piece from the board
     eng->nocp ^= ls1b;
     ckr_gen_jump_piecewise(eng, 0, ls1b, eng->opn, ls1b);
     eng->nocp ^= ls1b;
@@ -282,81 +281,47 @@ void ckr_gen_jump_piecewise(ckr_eng eng, int len,
 }
 
 // Simply read jump_dir and insert moves
+#define _CKR_GEN_SINGLE_JUMP(dir) \
+b = eng->jmp_dir[ckr_dir_##dir] & eng->my; \
+while (b) \
+{ \
+  uint64_t ls1b = b & (-b); \
+  ckr_ins_move(eng, ls1b | ckr_shift2_##dir(ls1b), ckr_shift_##dir(ls1b)); \
+  b ^= ls1b; \
+}
 void ckr_gen_single_jump(ckr_eng eng)
 {
   uint64_t b;
-  b = eng->jmp_dir[ckr_dir_dl] & eng->my;
-  while (b)
-  {
-    uint64_t ls1b = b & (-b);
-    ckr_ins_move(eng, ls1b | ckr_shift2_dl(ls1b), ckr_shift_dl(ls1b));
-    b ^= ls1b;
-  }
-
-  b = eng->jmp_dir[ckr_dir_dr] & eng->my;
-  while (b)
-  {
-    uint64_t ls1b = b & (-b);
-    ckr_ins_move(eng, ls1b | ckr_shift2_dr(ls1b), ckr_shift_dr(ls1b));
-    b ^= ls1b;
-  }
-
-  b = eng->jmp_dir[ckr_dir_ul] & eng->my;
-  while (b)
-  {
-    uint64_t ls1b = b & (-b);
-    ckr_ins_move(eng, ls1b | ckr_shift2_ul(ls1b), ckr_shift_ul(ls1b));
-    b ^= ls1b;
-  }
-
-  b = eng->jmp_dir[ckr_dir_ur] & eng->my;
-  while (b)
-  {
-    uint64_t ls1b = b & (-b);
-    ckr_ins_move(eng, ls1b | ckr_shift2_ur(ls1b), ckr_shift_ur(ls1b));
-    b ^= ls1b;
-  }
+  _CKR_GEN_SINGLE_JUMP(dl);
+  _CKR_GEN_SINGLE_JUMP(dr);
+  _CKR_GEN_SINGLE_JUMP(ul);
+  _CKR_GEN_SINGLE_JUMP(ur);
 }
+#undef _CKR_GEN_SINGLE_JUMP
 
 // Check which piece is not obstructed in one direction, then insert
+#define _CKR_GEN_WALK(dir, ops_dir) \
+b = ckr_shift_##ops_dir(eng->nocp) & pieces; \
+while (b) \
+{ \
+  uint64_t ls1b = b & (-b); \
+  ckr_ins_move(eng, ls1b | ckr_shift_##dir(ls1b), 0); \
+  b ^= ls1b; \
+}
 void ckr_gen_up_walk(ckr_eng eng, uint64_t pieces)
 {
   uint64_t b = ckr_shift_dl(eng->nocp) & pieces;
-  while (b)
-  {
-    uint64_t ls1b = b & (-b);
-    ckr_ins_move(eng, ls1b | ckr_shift_ur(ls1b), 0);
-    b ^= ls1b;
-  }
-
-  b = ckr_shift_dr(eng->nocp) & pieces;
-  while (b)
-  {
-    uint64_t ls1b = b & (-b);
-    ckr_ins_move(eng, ls1b | ckr_shift_ul(ls1b), 0);
-    b ^= ls1b;
-  }
+  _CKR_GEN_WALK(ur, dl);
+  _CKR_GEN_WALK(ul, dr);
 }
 
 void ckr_gen_down_walk(ckr_eng eng, uint64_t pieces)
 {
   uint64_t b;
-  b = ckr_shift_ul(eng->nocp) & pieces;
-  while (b)
-  {
-    uint64_t ls1b = b & (-b);
-    ckr_ins_move(eng, ls1b | ckr_shift_dr(ls1b), 0);
-    b ^= ls1b;
-  }
-
-  b = ckr_shift_ur(eng->nocp) & pieces;
-  while (b)
-  {
-    uint64_t ls1b = b & (-b);
-    ckr_ins_move(eng, ls1b | ckr_shift_dl(ls1b), 0);
-    b ^= ls1b;
-  }
+  _CKR_GEN_WALK(dr, ul);
+  _CKR_GEN_WALK(dl, ur);
 }
+#undef _CKR_GEN_WALK
 
 void ckr_ins_move(ckr_eng eng, uint64_t my, uint64_t opn)
 {
@@ -383,12 +348,6 @@ void ckr_ins_jump(ckr_eng eng, uint64_t my, uint64_t opn, int jump)
     return;
   }
 }
-
-// // Two macros for iterations based on individual bits
-// // x is uint64_t, the bit array to be iterated on
-// // exports one bit of x at one time, ls1b
-// #define BITWISE_FOR_BEGIN(x) while (x) { uint64_t ls1b = x & (-x)
-// #define BITWISE_FOR_END(x) x ^= ~ls1b; }
 
 #ifdef __cplusplus
 }

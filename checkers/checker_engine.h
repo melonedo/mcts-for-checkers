@@ -49,11 +49,11 @@ void ckr_gen_single_jump(ckr_eng);
 
 // Generate (possibly) multiple jumps, using jmp_dir,
 // Faster, but flawed
-void ckr_gen_jump(ckr_eng);
+void ckr_gen_jump_fast(ckr_eng);
 
 
 // Backup move generation without using jmp_dir
-void ckr_gen_jump_backup(ckr_eng);
+void ckr_gen_jump(ckr_eng);
 
 // Do depth-first search to find all the jumps
 // len: length of the jump
@@ -82,7 +82,9 @@ void ckr_ins_jump(ckr_eng, uint64_t my, uint64_t opn, int jump);
 bool ckr_parse_jump(ckr_eng, uint64_t piece, uint64_t opn);
 
 // Apply the given move
-ckr_pos ckr_apply_move(const ckr_pos *, const struct CheckerMove *);
+static inline ckr_pos ckr_apply_move(
+  uint64_t old_my, uint64_t old_opn, uint64_t old_king,
+  uint64_t mov_my, uint64_t mov_opn, int new_ply_count, bool is_up);
 
 #ifdef __cplusplus
 }

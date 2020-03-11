@@ -1,3 +1,9 @@
+#ifndef CHECKERS_MSWS_C_INCLUDED
+#define CHECKERS_MSWS_C_INCLUDED
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**************************************************************************\
 *                                                                          *
 *  Middle Square Weyl Sequence Random Number Generator                     *
@@ -34,19 +40,14 @@
 *  http://www.gnu.org/licenses                                             *
 *                                                                          *
 \**************************************************************************/
-#ifndef CHECKERS_RANDOM_C_INCLUDED
-#define CHECKERS_RANDOM_C_INCLUDED
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-uint32_t msws() {
+uint32_t msws()
+{
   static uint64_t x = 0x86ced140fe30d875, w = 0x86ced140fe30d875, s = 0x86ced140fe30d875;
-   x *= x;
-   x += (w += s);
-   return x = (x>>32) | (x<<32);
+  x *= x;
+  x += (w += s);
+  return x = (x>>32) | (x<<32);
 }
-// uint32_t msws() {return rand();}
 
 #ifdef __cplusplus
 }

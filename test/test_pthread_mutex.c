@@ -3,7 +3,7 @@
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
 #include "../test/print.h"
-#include "../mcts/random.c"
+#include "../mcts/msws.c"
 #include "../checkers/checker_util.c"
 #include "../checkers/checker_engine.c"
 #include "../test/print.c"

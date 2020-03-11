@@ -2,7 +2,7 @@
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
 #include "../test/print.h"
-#include "../mcts/random.c"
+#include "../mcts/msws.c"
 #include "../checkers/checker_util.c"
 #include "../checkers/checker_engine.c"
 #include "../test/print.c"
@@ -90,10 +90,11 @@ void wait(struct CheckerTree *t)
 {
   int end_num;
   fscanf(rec, "%d", &end_num);
+  printf("X %d\n", end_num);
   while (mcts_rollout_num(t) < end_num)
   {
     mcts_rollout(t);
   }
   print_threshold = 5000;
-  // print_tree(t);
+  print_tree(t);
 }

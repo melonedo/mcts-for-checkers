@@ -2,7 +2,7 @@
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
 #include "../test/print.h"
-#include "../mcts/random.c"
+#include "../mcts/msws.c"
 #include "../checkers/checker_util.c"
 #include "../checkers/checker_engine.c"
 #include "../test/print.c"
@@ -55,11 +55,10 @@ void loop(struct CheckerTree *t)
       case 'T':
       turn(t);
       break;
+
+      case 'E':
+      return;
     }
-    // printf("DEBUG turn #%d [%s] %d of %d, %f%%\n", t->pos.ply_count, buf,
-    // -t->win_num, t->total_num / 2, -100.0 * t->win_num / t->total_num);
-    // // print_position(&t->pos);
-    // fflush(stdout);
   }
 }
 
@@ -76,6 +75,7 @@ void place(struct CheckerTree *t)
     mov[i] = 8 * row + col;
   }
   static struct CheckerEngine eng_, *eng = &eng_;
+
   pthread_mutex_lock(&game_tree_mutex);
   // Record
   printf("DEBUG X %d PLACE %d", mcts_rollout_num(t), len);
@@ -85,10 +85,12 @@ void place(struct CheckerTree *t)
 
   struct CheckerPosition pos = ckr_make_move(eng, &t->pos, mov);
   mcts_free_except(t, &pos);
+
+  // Print result for checking
   printf("DEBUG turn #%d %d/%d, %f%% winning\n", t->pos.ply_count,
   t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
+
   pthread_mutex_unlock(&game_tree_mutex);
-  // print_tree(t);
 }
 
 void turn(struct CheckerTree *t)
@@ -107,19 +109,23 @@ void turn(struct CheckerTree *t)
   {
     Sleep(10);
   }
+
   pthread_mutex_lock(&game_tree_mutex);
   // Record
   printf("DEBUG X %d TURN\n", mcts_rollout_num(t));
-  // print_tree(t);
+
   const char *mov = mcts_extract_best(t);
   printf("DEBUG %ldms\n", clock() - start);
   printf("%d", strlen(mov));
   for (int i = 0; mov[i]; i++)
     printf(" %d,%d", mov[i] / 8, mov[i] % 8);
   putchar('\n');
+
+  // Print result
   printf("DEBUG turn #%d %d/%d, %f%% losing\n", t->pos.ply_count,
   t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
   fflush(stdout);
+
   pthread_mutex_unlock(&game_tree_mutex);
 }
 

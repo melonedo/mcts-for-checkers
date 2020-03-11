@@ -75,7 +75,8 @@ int mcts_rollout(ckr_tree t)
   }
   else
   {
-    switch (mcts_leaf_type(t)) {
+    switch (mcts_leaf_type(t))
+    {
       case MCTS_NEW_LEAF:
       t->child_num = MCTS_OLD_LEAF;
       res = mcts_simulate(t);
@@ -213,14 +214,14 @@ int mcts_select(ckr_tree t)
           maxv = eval;
       }
     }
-
   }
   return maxi;
 }
 
+// https://www.chessprogramming.org/UCT
+// Now intergrated into mcts_select for performance
 double mcts_evaluate(ckr_tree t, int ind)
 {
-  // https://www.chessprogramming.org/UCT
   ckr_tree child = mcts_get_child(t, ind);
   // Note that wins of the child are loses of the root
   return -mcts_win_freq(child) +
