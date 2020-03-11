@@ -18,12 +18,13 @@
 pthread_t search_thread;
 // Protect the game tree
 pthread_mutex_t game_tree_mutex;
+bool game_ended = false;
 
 void loop(struct CheckerTree *);
 void start(struct CheckerTree *);
 void place(struct CheckerTree *);
 void turn(struct CheckerTree *);
-
+void end(struct CheckerTree *);
 // Search the tree
 void *search(void *);
 
@@ -34,7 +35,6 @@ int main()
   pthread_mutex_init(&game_tree_mutex, NULL);
   pthread_create(&search_thread, NULL, search, root);
   loop(root);
-  pthread_mutex_destroy(&game_tree_mutex);
 }
 
 void loop(struct CheckerTree *t)
@@ -57,6 +57,7 @@ void loop(struct CheckerTree *t)
       break;
 
       case 'E':
+      end(t);
       return;
     }
   }
@@ -147,7 +148,7 @@ void *search(void *t)
 {
   struct CheckerTree *tree = t;
   const int pack_size = 10;
-  while (true)
+  while (!game_ended)
   {
     // Executed in packs to avoid large overhead locking and unlocking
     pthread_mutex_lock(&game_tree_mutex);
@@ -155,4 +156,23 @@ void *search(void *t)
       mcts_rollout(tree);
     pthread_mutex_unlock(&game_tree_mutex);
   }
+  pthread_exit(NULL);
+  __builtin_unreachable();
+}
+
+void end(struct CheckerTree *t)
+{
+  // End the searcher thread
+  game_ended = true;
+  pthread_join(search_thread, NULL);
+
+  // Free the mutex
+  pthread_mutex_lock(&game_tree_mutex);
+  pthread_mutex_unlock(&game_tree_mutex);
+  pthread_mutex_destroy(&game_tree_mutex);
+
+  // Free the tree
+  mcts_free(t);
+  free(t);
+  printf("DEBUG game ended.\n");
 }

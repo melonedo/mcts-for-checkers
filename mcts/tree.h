@@ -75,6 +75,10 @@ void mcts_free_except_ind(ckr_tree, int);
 // Calculate the meterial balance after 120 plies
 int mcts_end_game_count(const struct CheckerPosition *pos);
 
+// Free all branches of the given node
+// The node itself is allocated together with sibling nodes as an array,
+// So only call free on t->children
+void mcts_free(ckr_tree);
 #ifdef __cplusplus
 }
 #endif
