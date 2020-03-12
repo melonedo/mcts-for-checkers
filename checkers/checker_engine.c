@@ -200,6 +200,12 @@ const char *ckr_parse_move(ckr_eng eng, const ckr_pos *old, const ckr_pos *new)
   return eng->move_str_buf;
 }
 
+#define _CKR_PARSE_JUMP(dir) \
+{ \
+  uint64_t b = ckr_shift_##dir(piece); \
+  if (b & opn && ckr_parse_jump(eng, ckr_shift_##dir(b), opn ^ b)) \
+    return true; \
+}
 bool ckr_parse_jump(ckr_eng eng, uint64_t piece, uint64_t opn)
 {
   eng->move_str_buf[eng->move_str_len++] = ckr_index(piece);
@@ -207,26 +213,15 @@ bool ckr_parse_jump(ckr_eng eng, uint64_t piece, uint64_t opn)
   if (!opn)
     return true;
 
-  uint64_t b;
-  b = ckr_shift_dl(piece);
-  if (b & opn && ckr_parse_jump(eng, ckr_shift_dl(b), opn ^ b))
-    return true;
-
-  b = ckr_shift_dr(piece);
-  if (b & opn && ckr_parse_jump(eng, ckr_shift_dr(b), opn ^ b))
-    return true;
-
-  b = ckr_shift_ul(piece);
-  if (b & opn && ckr_parse_jump(eng, ckr_shift_ul(b), opn ^ b))
-    return true;
-
-  b = ckr_shift_ur(piece);
-  if (b & opn && ckr_parse_jump(eng, ckr_shift_ur(b), opn ^ b))
-    return true;
+  _CKR_PARSE_JUMP(dl);
+  _CKR_PARSE_JUMP(dr);
+  _CKR_PARSE_JUMP(ul);
+  _CKR_PARSE_JUMP(ur);
 
   eng->move_str_len--;
   return false;
 }
+#undef _CKR_PARSE_JUMP
 
 ckr_pos ckr_starting_pos()
 {
@@ -252,46 +247,42 @@ void ckr_gen_jump(ckr_eng eng)
   }
 }
 
+#define _CKR_GEN_JUMP_PIECEWISE(dir) \
+{ \
+  uint64_t next = ckr_shift2_##dir(piece); \
+  if (next & ckr_shift_##dir(opn) & eng->nocp) \
+  ckr_gen_jump_piecewise(eng, len, next, opn ^ ckr_shift_##dir(piece), start); \
+}
+
 void ckr_gen_jump_piecewise(ckr_eng eng, int len,
     uint64_t piece, uint64_t opn, uint64_t start)
 {
   // ckr_ins_jump will ignore short or immature moves
   ckr_ins_jump(eng, start ^ piece, eng->opn ^ opn, len);
-
-  uint64_t next;
   len++;
 
   // Examine the four directions one by one
-  next = ckr_shift2_dl(piece);
-  if (next & ckr_shift_dl(opn) & eng->nocp)
-    ckr_gen_jump_piecewise(eng, len, next, opn ^ ckr_shift_dl(piece), start);
-
-  next = ckr_shift2_dr(piece);
-  if (next & ckr_shift_dr(opn) & eng->nocp)
-   ckr_gen_jump_piecewise(eng, len, next, opn ^ ckr_shift_dr(piece), start);
-
-  next = ckr_shift2_ul(piece);
-  if (next & ckr_shift_ul(opn) & eng->nocp)
-  ckr_gen_jump_piecewise(eng, len, next, opn ^ ckr_shift_ul(piece), start);
-
-  next = ckr_shift2_ur(piece);
-  if (next & ckr_shift_ur(opn) & eng->nocp)
-   ckr_gen_jump_piecewise(eng, len, next, opn ^ ckr_shift_ur(piece), start);
-
+  _CKR_GEN_JUMP_PIECEWISE(dl);
+  _CKR_GEN_JUMP_PIECEWISE(dr);
+  _CKR_GEN_JUMP_PIECEWISE(ul);
+  _CKR_GEN_JUMP_PIECEWISE(ur);
 }
+#undef _CKR_GEN_JUMP_PIECEWISE
 
 // Simply read jump_dir and insert moves
 #define _CKR_GEN_SINGLE_JUMP(dir) \
-b = eng->jmp_dir[ckr_dir_##dir] & eng->my; \
-while (b) \
 { \
-  uint64_t ls1b = b & (-b); \
-  ckr_ins_move(eng, ls1b | ckr_shift2_##dir(ls1b), ckr_shift_##dir(ls1b)); \
-  b ^= ls1b; \
+  uint64_t b = eng->jmp_dir[ckr_dir_##dir] & eng->my; \
+  while (b) \
+  { \
+    uint64_t ls1b = b & (-b); \
+    ckr_ins_move(eng, ls1b | ckr_shift2_##dir(ls1b), ckr_shift_##dir(ls1b)); \
+    b ^= ls1b; \
+  } \
 }
+
 void ckr_gen_single_jump(ckr_eng eng)
 {
-  uint64_t b;
   _CKR_GEN_SINGLE_JUMP(dl);
   _CKR_GEN_SINGLE_JUMP(dr);
   _CKR_GEN_SINGLE_JUMP(ul);
@@ -301,23 +292,23 @@ void ckr_gen_single_jump(ckr_eng eng)
 
 // Check which piece is not obstructed in one direction, then insert
 #define _CKR_GEN_WALK(dir, ops_dir) \
-b = ckr_shift_##ops_dir(eng->nocp) & pieces; \
-while (b) \
 { \
-  uint64_t ls1b = b & (-b); \
-  ckr_ins_move(eng, ls1b | ckr_shift_##dir(ls1b), 0); \
-  b ^= ls1b; \
+  uint64_t b = ckr_shift_##ops_dir(eng->nocp) & pieces; \
+  while (b) \
+  { \
+    uint64_t ls1b = b & (-b); \
+    ckr_ins_move(eng, ls1b | ckr_shift_##dir(ls1b), 0); \
+    b ^= ls1b; \
+  } \
 }
 void ckr_gen_up_walk(ckr_eng eng, uint64_t pieces)
 {
-  uint64_t b = ckr_shift_dl(eng->nocp) & pieces;
   _CKR_GEN_WALK(ur, dl);
   _CKR_GEN_WALK(ul, dr);
 }
 
 void ckr_gen_down_walk(ckr_eng eng, uint64_t pieces)
 {
-  uint64_t b;
   _CKR_GEN_WALK(dr, ul);
   _CKR_GEN_WALK(dl, ur);
 }

@@ -28,12 +28,7 @@ ckr_tree mcts_get_child(ckr_tree t, int ind)
 
 int mcts_retrive(ckr_tree t)
 {
-  if (t->win_num > 0)
-    return 1;
-  else if (t->win_num < 0)
-    return -1;
-  else
-    return 0;
+  return mcts_get_sign(t->win_num);
 }
 
 double mcts_win_freq(ckr_tree t)
@@ -129,12 +124,7 @@ int mcts_end_game_count(const struct CheckerPosition *pos)
 {
   int res = ckr_popcount(pos->down) - ckr_popcount(pos->up) + 3 *
     (ckr_popcount(pos->down & pos->king) - ckr_popcount(pos->up & pos->king));
-  if (res > 0)
-    return 1;
-  else if (res < 0)
-    return -1;
-  else
-    return 0;
+  return mcts_get_sign(res);
 }
 
 void mcts_expand(ckr_tree t)
@@ -288,6 +278,16 @@ void mcts_free_except_ind(ckr_tree t, int ind)
   *t = child_list[ind];
   free(child_list);
 
+}
+
+static inline int mcts_get_sign(int x)
+{
+  if (x > 0)
+    return 1;
+  else if (x < 0)
+    return -1;
+  else
+    return 0;
 }
 
 #ifdef __cplusplus

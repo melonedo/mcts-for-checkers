@@ -79,6 +79,11 @@ int mcts_end_game_count(const struct CheckerPosition *pos);
 // The node itself is allocated together with sibling nodes as an array,
 // So only call free on t->children
 void mcts_free(ckr_tree);
+
+// Return the sign of given integer.
+// 1 for positive, -1 for negative, 0 for zero.
+static inline int mcts_get_sign(int);
+
 #ifdef __cplusplus
 }
 #endif
