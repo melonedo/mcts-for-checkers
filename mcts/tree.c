@@ -9,6 +9,10 @@ extern "C" {
 #include <assert.h>
 #include <string.h>
 
+#ifdef MCTS_DEBUG
+long node_count = 0;
+#endif
+
 static struct CheckerEngine eng_, *eng = &eng_;
 
 bool mcts_is_leaf(ckr_tree t)
@@ -50,6 +54,9 @@ void mcts_free(ckr_tree t)
       mcts_free(&t->children[i]);
     }
     free(t->children);
+#ifdef MCTS_DEBUG
+    node_count -= t->child_num;
+#endif
   }
 }
 
@@ -147,7 +154,9 @@ void mcts_expand(ckr_tree t)
       mcts_random_permute(perm, len);
       t->children = calloc(len, sizeof(struct CheckerTree));
       t->child_num = len;
-
+#ifdef MCTS_DEBUG
+      node_count += t->child_num;
+#endif
       for (int i = 0; i < len; i++)
       {
         t->children[i].pos = ckr_get_pos(eng, perm[i]);

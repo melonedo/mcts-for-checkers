@@ -1,3 +1,4 @@
+#define MCTS_DEBUG
 
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
@@ -32,7 +33,11 @@ void loop(struct CheckerTree *t)
   while (true)
   {
     char buf[256];
-    fscanf(rec, "%s", buf);
+    if (fscanf(rec, "%s", buf) != 1)
+    {
+      printf("No more records!\n");
+      return;
+    }
     switch (buf[0])
     {
       case 'P':
@@ -89,12 +94,16 @@ void turn(struct CheckerTree *t)
 void wait(struct CheckerTree *t)
 {
   int end_num;
+  clock_t start_time = clock();
   fscanf(rec, "%d", &end_num);
   printf("X %d\n", end_num);
   while (mcts_rollout_num(t) < end_num)
   {
     mcts_rollout(t);
   }
-  print_threshold = 5000;
-  print_tree(t);
+  print_threshold = 10000;
+  // print_tree(t);
+  printf("%dms, %d,%04d nodes in total (%.2fMB).\n", clock() - start_time,
+    node_count / 10000, node_count % 10000,
+    sizeof(struct CheckerTree) * node_count / 1e6);
 }
