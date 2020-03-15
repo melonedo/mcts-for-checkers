@@ -11,6 +11,7 @@ extern "C" {
 
 #ifdef MCTS_DEBUG
 long node_count = 0;
+int sim_count_[3], *sim_count = sim_count_ + 1;
 #endif
 
 static struct CheckerEngine eng_, *eng = &eng_;
@@ -129,8 +130,11 @@ void mcts_random_permute(int *arr, int len)
 // Positive if lower wins, negative if upper wins, 0 if draw
 int mcts_end_game_count(const struct CheckerPosition *pos)
 {
-  int res = ckr_popcount(pos->down) - ckr_popcount(pos->up) + 3 *
+  int res = ckr_popcount(pos->down) - ckr_popcount(pos->up) + 2 *
     (ckr_popcount(pos->down & pos->king) - ckr_popcount(pos->up & pos->king));
+#ifdef MCTS_DEBUG
+  sim_count[mcts_get_sign(res)]++;
+#endif
   return mcts_get_sign(res);
 }
 
@@ -185,6 +189,12 @@ int mcts_simulate(ckr_tree t)
     }
     else
     {
+#ifdef MCTS_DEBUG
+      if (pos.ply_count % 2 != 0)
+        sim_count[1]++;
+      else
+        sim_count[-1]++;
+#endif
       return (pos.ply_count - t->pos.ply_count) % 2 != 0 ? 1 : -1;
     }
   }

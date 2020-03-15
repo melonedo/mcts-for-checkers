@@ -5,15 +5,16 @@ files = [
     'checkers/checker_util.h',
     'mcts/mcts.h',
     'mcts/tree.h',
-    'mcts/msws.c',
+    'mcts/msws.h',
     'checkers/checker_util.c',
     'checkers/checker_engine.c',
     'mcts/tree.c',
+    'mcts/msws.c',
     'oj/oj.c']
 outfile = 'combined.c'
 preamble = """/*
  * This file is automatically combined to be submitted to oj.
- * For better appearance, please refer
+ * From my repo:
  * https://github.com/melonedo/mcts-for-checkers
  */\n\n\n
 """
@@ -29,3 +30,4 @@ with open(outfile, 'wt') as outf:
             for line in inf:
                 if re.fullmatch('#include ".*"\n', line) is None:
                     outf.write(line)
+print("Done")

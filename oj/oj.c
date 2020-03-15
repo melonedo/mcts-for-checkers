@@ -2,11 +2,12 @@
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
 #include "../test/print.h"
-#include "../mcts/msws.c"
+#include "../mcts/msws.h"
 #include "../checkers/checker_util.c"
 #include "../checkers/checker_engine.c"
 #include "../test/print.c"
 #include "../mcts/tree.c"
+#include "../mcts/msws.c"
 
 #include <time.h>
 #include <stdbool.h>
@@ -30,7 +31,7 @@ void *search(void *);
 
 int main()
 {
-  // srand(12345679);
+  msws_srand();
   struct CheckerTree *root = mcts_root();
   pthread_mutex_init(&game_tree_mutex, NULL);
   pthread_create(&search_thread, NULL, search, root);
@@ -91,6 +92,7 @@ void place(struct CheckerTree *t)
   printf("DEBUG turn #%d %d/%d, %f%% winning\n", t->pos.ply_count,
   t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
 
+  msws_srand();
   pthread_mutex_unlock(&game_tree_mutex);
 }
 
@@ -106,7 +108,7 @@ void turn(struct CheckerTree *t)
   {
     end += 1600;
   }
-  while (clock() < end)
+  while (clock() < end && mcts_rollout_num(t) < 3000000)
   {
     Sleep(10);
   }
@@ -127,6 +129,7 @@ void turn(struct CheckerTree *t)
   t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
   fflush(stdout);
 
+  msws_srand();
   pthread_mutex_unlock(&game_tree_mutex);
 }
 
