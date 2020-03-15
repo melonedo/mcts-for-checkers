@@ -32,13 +32,9 @@ typedef const char *ckr_mov; // see ckr_get_move
 // Return starting position of the checkers
 ckr_pos ckr_starting_pos();
 
-// Initialized CheckerEngine
-// void ckr_init_engine(ckr_eng);
-
-//---All below should be called after ckr_init_engine
-
-// Free CheckerEngine
-// void ckr_free_engine(ckr_eng);
+// Allocate and free memory for a CheckerEngine
+ckr_eng ckr_new_eng(void);
+void ckr_free_eng(ckr_eng);
 
 // Set CheckerEngine to examine given position, namely, generate future
 // moves of it.
@@ -60,6 +56,18 @@ const char *ckr_parse_move(ckr_eng, const ckr_pos *old, const ckr_pos *new);
 
 // Make a move according to given string of moves
 ckr_pos ckr_make_move(ckr_eng, const ckr_pos *, const char *);
+
+// Find one possible move between given positions
+// Similar to ckr_parse_move, but return heap memory, caller should free it
+char *ckr_find_move(const ckr_pos *old, const ckr_pos *new);
+
+// Serialization/deserialization support
+// For the string representation, ' ' for illegal squares, '.' for empty squares
+// 'b', 'B', 'w', 'W' for black men, black kings, white men, whites kings
+// The first 64 bytes will be checked
+ckr_pos ckr_deserialize_pos(const char *);
+// Return heap memory, caller should free it
+char *ckr_serialize_pos(const ckr_pos *);
 #include "checker_engine.h"
 #include "checker_util.h"
 

@@ -1,5 +1,11 @@
 *.exe
+*.so
+*.o
+*.pyc
 combined.c
 test/log.txt
 test/record.txt
 test/place.txt
+mcts/mempool.c
+mcts/mempool.h
+test/tree.txt

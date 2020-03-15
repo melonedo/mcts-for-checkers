@@ -16,6 +16,9 @@ void print_position(const struct CheckerPosition *);
 // No \n is printed
 void print_move(const char *);
 
+// Similar to print_move, but simple return the result
+char *repr_move(const char *);
+
 // Print the game tree
 // Format:
 // 500/1000 - [5,6 4,5]100/300
@@ -24,4 +27,7 @@ void print_tree(const struct CheckerTree *);
 
 // Print the memory as-is
 void print_mem(const void *, int len);
+
+// Dump the tree into json (stored in tree.txt)
+void dump_tree(const struct CheckerTree *);
 #endif

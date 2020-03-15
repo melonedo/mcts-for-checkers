@@ -5,6 +5,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include "checker_util.h"
+#include <stdint.h>
 
 // The layout of board:
 // ..01..03..05..07
@@ -36,6 +38,8 @@ int ckr_index(uint64_t);
 
 // Population count, count 1 bits
 int ckr_popcount(uint64_t);
+
+uint64_t ckr_radius2(uint64_t);
 #ifdef __cplusplus
 }
 #endif

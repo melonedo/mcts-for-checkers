@@ -4,7 +4,10 @@
 extern "C" {
 #endif
 
+#include "checkers.h"
 #include "checker_engine.h"
+#include "checker_util.h"
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -199,6 +202,76 @@ const char *ckr_parse_move(ckr_eng eng, const ckr_pos *old, const ckr_pos *new)
   eng->move_str_buf[eng->move_str_len] = 0;
   return eng->move_str_buf;
 }
+bool ckr_find_move_jump(char *move_buf, int *move_len,
+   uint64_t piece, uint64_t opn);
+char *ckr_find_move(const ckr_pos *old, const ckr_pos *new)
+{
+  char *move_buf = malloc(CHECKER_MAX_MOVE_NUM + 1);
+  int move_len = 0;
+  uint64_t my, move_my, move_opn;
+  if (old->ply_count % 2 != 0)
+  {
+    my = old->up;
+    move_my = old->up ^ new->up;
+    move_opn = old->down ^ new->down;
+  }
+  else
+  {
+    my = old->down;
+    move_my = old->down ^ new->down;
+    move_opn = old->up ^ new->up;
+  }
+  if (move_opn)
+  {
+    // Jump
+    uint64_t b;
+    if (move_my)
+      b = move_my & my;
+    else
+      b = my;
+    while (b)
+    {
+      uint64_t ls1b = b & (-b);
+      if (ckr_find_move_jump(move_buf, &move_len, ls1b, move_opn))
+        break;
+      b ^= ls1b;
+    }
+  }
+  else
+  {
+    // Walk does not affect the opponent
+    move_len = 2;
+    move_buf[0] = ckr_index(move_my & my);
+    move_buf[1] = ckr_index(move_my & ~my);
+  }
+  move_buf[move_len] = 0;
+  return move_buf;
+}
+
+#define _CKR_FIND_MOVE_JUMP(dir) \
+{ \
+  uint64_t b = ckr_shift_##dir(piece); \
+  if (b & opn && \
+    ckr_find_move_jump(move_buf, move_len, ckr_shift_##dir(b), opn ^ b)) \
+    return true; \
+}
+bool ckr_find_move_jump(char *move_buf, int *move_len,
+   uint64_t piece, uint64_t opn)
+{
+  move_buf[(*move_len)++] = ckr_index(piece);
+  // Check if everything is done
+  if (!opn)
+    return true;
+
+  _CKR_FIND_MOVE_JUMP(dl);
+  _CKR_FIND_MOVE_JUMP(dr);
+  _CKR_FIND_MOVE_JUMP(ul);
+  _CKR_FIND_MOVE_JUMP(ur);
+
+  (*move_len)--;
+  return false;
+}
+#undef _CKR_FIND_MOVE_JUMP
 
 #define _CKR_PARSE_JUMP(dir) \
 { \
@@ -338,6 +411,78 @@ void ckr_ins_jump(ckr_eng eng, uint64_t my, uint64_t opn, int jump)
     // jump < eng->jump_len, do nothing
     return;
   }
+}
+
+ckr_eng ckr_new_eng(void)
+{
+  return malloc(sizeof(struct CheckerEngine));
+}
+
+void ckr_free_eng(ckr_eng eng)
+{
+  free(eng);
+}
+
+ckr_pos ckr_deserialize_pos(const char *pos_str)
+{
+  ckr_pos rval = {0, 0, 0};
+  uint64_t b = 1;
+  for (int i = 0; i < 64; i++, b <<= 1)
+  {
+    switch (pos_str[i])
+    {
+      case ' ': case '.':
+      continue;
+
+      case 'b':
+      rval.down |= b;
+      break;
+
+      case 'w':
+      rval.up |= b;
+      break;
+
+      case 'B':
+      rval.down |= b;
+      rval.king |= b;
+      break;
+
+      case 'W':
+      rval.up |= b;
+      rval.king |= b;
+      break;
+    }
+  }
+  return rval;
+}
+
+char *ckr_serialize_pos(const ckr_pos *pos)
+{
+  char *rval = malloc(65);
+  uint64_t b = 1;
+  for (int i = 0; i < 64; i++, b <<= 1)
+  {
+    if (b & CHECKER_ILLEGAL_SQUARE)
+      rval[i] = ' ';
+    else if (b & pos->down)
+    {
+      if (b & pos->king)
+        rval[i] = 'B';
+      else
+        rval[i] = 'b';
+    }
+    else if (b & pos->up)
+    {
+      if (b & pos->king)
+        rval[i] = 'W';
+      else
+        rval[i] = 'w';
+    }
+    else
+      rval[i] = '.';
+  }
+  rval[64] = 0;
+  return rval;
 }
 
 #ifdef __cplusplus

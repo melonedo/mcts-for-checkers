@@ -101,8 +101,8 @@ void wait(struct CheckerTree *t)
   {
     mcts_rollout(t);
   }
-  print_threshold = 10000;
-  // print_tree(t);
+  print_threshold = 1000;
+  if (t->pos.ply_count == 55) dump_tree(t);
   printf("%dms, %d,%04d nodes in total (%.2fMB).\n", clock() - start_time,
     node_count / 10000, node_count % 10000,
     sizeof(struct CheckerTree) * node_count / 1e6);
