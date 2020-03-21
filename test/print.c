@@ -4,7 +4,7 @@
 #include "../mcts/tree.h"
 #include <stdio.h>
 #include <assert.h>
-int print_threshold = 100;
+int print_threshold = 1000;
 void print_position(const ckr_pos_t *pos)
 {
   printf("After %d plies: ", pos->ply_count);
@@ -73,7 +73,7 @@ void print_tree(mcts_tree_t t)
 
 void print_tree_iter(mcts_tree_t t, int space_num, const char *move)
 {
-  if (space_num > 1400)
+  if (space_num > 140)
   {
     printf("...");
     return;

@@ -89,15 +89,22 @@ void ckr_parse_pos(ckr_eng_t eng, const ckr_pos_t *pos)
   else
   {
     eng->jump_len = 0;
+    uint64_t my_king = eng->my & eng->king;
     if (eng->is_up)
     {
       ckr_gen_down_walk(eng, eng->my);
-      ckr_gen_up_walk(eng, eng->my & eng->king);
+      if (my_king)
+      {
+        ckr_gen_up_walk(eng, my_king);
+      }
     }
     else
     {
       ckr_gen_up_walk(eng, eng->my);
-      ckr_gen_down_walk(eng, eng->my & eng->king);
+      if (my_king)
+      {
+        ckr_gen_down_walk(eng, my_king);
+      }
     }
   }
 }

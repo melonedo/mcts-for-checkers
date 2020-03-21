@@ -107,12 +107,8 @@ int mcts_tree_rollout(mcts_tree_t t)
 
       case MCTS_OLD_LEAF:
       mcts_expand(t);
-      // After expanding, t could have children, or found it has ended the game
-      if (!mcts_is_leaf(t))
-        res = -mcts_tree_rollout(mcts_get_child(t, 0));
-      else
-        res = mcts_retrive(t);
-      break;
+      // Dispatch again
+      return mcts_tree_rollout(t);
 
       case MCTS_END_GAME:
       res = mcts_retrive(t);
@@ -120,7 +116,6 @@ int mcts_tree_rollout(mcts_tree_t t)
 
       default:
       assert(0);
-      __builtin_unreachable();
     }
   }
 
@@ -160,18 +155,9 @@ int mcts_end_game_count(const ckr_pos_t *pos)
 
 void mcts_expand(mcts_tree_t t)
 {
-  if (t->pos.ply_count >= 120)
+  if (t->pos.ply_count < 120)
   {
-    int res = mcts_end_game_count(&t->pos);
-    t->child_num = MCTS_END_GAME;
-    t->total_num = 2;
-    t->win_num = res;
-  }
-  else
-  {
-#ifndef MCTS_STATIC_CKR_ENG
     ckr_eng_t eng = ckr_eng_new();
-#endif
     ckr_parse_pos(eng, &t->pos);
     int len = ckr_move_num(eng);
     if (len)
@@ -189,25 +175,20 @@ void mcts_expand(mcts_tree_t t)
         t->children[i].pos = ckr_get_pos(eng, perm[i]);
         t->children[i].child_num = MCTS_NEW_LEAF;
       }
+      ckr_eng_free(eng);
+      return;
     }
-    else
-    {
-      int res = mcts_end_game_count(&t->pos);
-      t->child_num = MCTS_END_GAME;
-      t->total_num = 2;
-      t->win_num = t->pos.ply_count % 2 != 0 ? -res : res;
-    }
-#ifndef MCTS_STATIC_CKR_ENG
     ckr_eng_free(eng);
-#endif
   }
+  int res = mcts_end_game_count(&t->pos);
+  t->child_num = MCTS_END_GAME;
+  t->total_num = 0;
+  t->win_num = t->pos.ply_count % 2 != 0 ? -res : res;
 }
 
 int mcts_simulate(mcts_tree_t t)
 {
-#ifndef MCTS_STATIC_CKR_ENG
   ckr_eng_t eng = ckr_eng_new();
-#endif
   ckr_pos_t pos = t->pos;
   while (pos.ply_count < 120)
   {
@@ -224,15 +205,11 @@ int mcts_simulate(mcts_tree_t t)
       else
         sim_count[-1]++;
 #endif
-#ifndef MCTS_STATIC_CKR_ENG
       ckr_eng_free(eng);
-#endif
       return (pos.ply_count - t->pos.ply_count) % 2 != 0 ? 1 : -1;
     }
   }
-#ifndef MCTS_STATIC_CKR_ENG
   ckr_eng_free(eng);
-#endif
   int res = mcts_end_game_count(&t->pos);
   return t->pos.ply_count % 2 != 0 ? -res : res;
 }
@@ -241,7 +218,7 @@ int mcts_select(mcts_tree_t t)
 {
   double maxv = -1000;
   int maxi = 0;
-  // Natural logarithm of the number of rollouts of the parent node
+  // Cached because this is too slow
   double ln_par = log(mcts_rollout_num(t));
   for (int i = 0; i < t->child_num; i++)
   {
@@ -336,7 +313,18 @@ static inline int mcts_get_sign(int x)
 
 static inline int mcts_popcount(uint64_t x)
 {
+#ifndef MCTS_BK_POPCOUNT
   return __builtin_popcountll(x);
+#else
+  // Brian Kernighan's method
+  int count = 0;
+  while (x)
+  {
+    count++;
+    x &= x - 1;
+  }
+  return count;
+#endif
 }
 
 #ifdef __cplusplus
