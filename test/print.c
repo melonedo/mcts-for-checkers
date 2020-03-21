@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <assert.h>
 int print_threshold = 100;
-void print_position(const struct CheckerPosition *pos)
+void print_position(const ckr_pos_t *pos)
 {
   printf("After %d plies: ", pos->ply_count);
   uint64_t b = 1;
@@ -63,35 +63,33 @@ char *repr_move(const char *mov)
 }
 
 // Append space_num spaces before printing the tree
-void print_tree_iter(const struct CheckerTree *, int space_num);
+void print_tree_iter(const struct CheckerTree *, int space_num, const char *move);
 void print_tree(const struct CheckerTree *t)
 {
-  print_tree_iter(t, 0);
+  print_tree_iter(t, 0, "root");
   putchar('\n');
 }
 
-void print_tree_iter(const struct CheckerTree *t, int space_num)
+void print_tree_iter(const struct CheckerTree *t, int space_num, const char *move)
 {
   if (space_num > 1400)
   {
     printf("...");
     return;
   }
-  static struct CheckerEngine e;
-  const char *buf = e.move_str_buf;
   if (space_num != 0)
   {
     putchar('[');
-    for (int i = 0; buf[i]; i++)
+    for (int i = 0; move[i]; i++)
     {
       if (i != 0)
       {
         putchar(' ');
       }
-      printf("%d,%d", buf[i] / 8, buf[i] % 8);
+      printf("%d,%d", move[i] / 8, move[i] % 8);
     }
     putchar(']');
-    space_num += 2 + strlen(buf) * 4 - 1;
+    space_num += 2 + strlen(move) * 4 - 1;
   }
   int len = snprintf(NULL, 0, "%d/%d - ", t->win_num, t->total_num / 2);
   printf("%d/%d - ", t->win_num, t->total_num / 2);
@@ -114,8 +112,9 @@ void print_tree_iter(const struct CheckerTree *t, int space_num)
         for (int i = 0; i < space_num; i++)
         putchar(' ');
       }
-      ckr_parse_move(&e, &t->pos, &t->children[i].pos);
-      print_tree_iter(&t->children[i], space_num);
+      char *last_move = ckr_find_move(&t->pos, &t->children[i].pos);
+      print_tree_iter(&t->children[i], space_num, last_move);
+      free(last_move);
     }
   }
   else if (t->child_num == MCTS_END_GAME)

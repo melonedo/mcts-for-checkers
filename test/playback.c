@@ -1,10 +1,10 @@
 #define MCTS_DEBUG
 
 #include "../checkers/checkers.h"
+ckr_eng_t eng;
 #include "../mcts/mcts.h"
 #include "../test/print.h"
 #include "../mcts/msws.c"
-#include "../checkers/checker_util.c"
 #include "../checkers/checker_engine.c"
 #include "../test/print.c"
 #include "../mcts/tree.c"
@@ -23,6 +23,7 @@ FILE *rec;
 int main()
 {
   msws_srand();
+  eng = ckr_new_eng();
   struct CheckerTree *root = mcts_root();
   assert(rec = fopen("../test/record.txt", "r"));
   loop(root);
@@ -70,8 +71,7 @@ void place(struct CheckerTree *t)
   for (int i = 0; mov[i]; i++)
     printf(" %d,%d", mov[i] / 8, mov[i] % 8);
   putchar('\n');
-  static struct CheckerEngine eng_, *eng = &eng_;
-  struct CheckerPosition pos = ckr_make_move(eng, &t->pos, mov);
+  ckr_pos_t pos = ckr_make_move(&t->pos, mov);
   mcts_free_except(t, &pos);
   printf("DEBUG turn #%d %d/%d, %f%% winning\n", t->pos.ply_count,
   t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
@@ -82,11 +82,12 @@ void place(struct CheckerTree *t)
 void turn(struct CheckerTree *t)
 {
   printf("DEBUG X %d TURN\n", mcts_rollout_num(t));
-  const char *mov = mcts_extract_best(t);
+  char *mov = mcts_extract_best(t);
   printf("%d", strlen(mov));
   for (int i = 0; mov[i]; i++)
     printf(" %d,%d", mov[i] / 8, mov[i] % 8);
   putchar('\n');
+  free(mov);
   printf("DEBUG turn #%d %d/%d, %f%% losing\n", t->pos.ply_count,
   t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
   print_position(&t->pos);

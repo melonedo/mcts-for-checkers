@@ -18,11 +18,11 @@ ckr_tree mcts_root(void);
 int mcts_rollout(ckr_tree);
 
 // Deallocate the tree, leaving only the given branch
-void mcts_free_except(ckr_tree, const struct CheckerPosition *);
+void mcts_free_except(ckr_tree, const ckr_pos_t *);
 
 // Return the best move serialized (in internal buffer)
-// Free other branches
-const char *mcts_extract_best(ckr_tree);
+// Free other branches. Return heap memory.
+char *mcts_extract_best(ckr_tree);
 
 #include "tree.h"
 #ifdef __cplusplus

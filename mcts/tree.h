@@ -16,7 +16,7 @@ struct CheckerTree
   // And the difference between the numbers of winning moves and losing ones
   int win_num, total_num;
   // Position of current game
-  struct CheckerPosition pos;
+  ckr_pos_t pos;
 };
 
 enum CheckerLeafType
@@ -73,7 +73,7 @@ ckr_tree mcts_get_child(ckr_tree, int);
 void mcts_free_except_ind(ckr_tree, int);
 
 // Calculate the meterial balance after 120 plies
-int mcts_end_game_count(const struct CheckerPosition *pos);
+int mcts_end_game_count(const ckr_pos_t *pos);
 
 // Free all branches of the given node
 // The node itself is allocated together with sibling nodes as an array,

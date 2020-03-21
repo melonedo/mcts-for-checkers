@@ -9,7 +9,7 @@
 // "bb" and "ww" for black and white men
 // "BB" and "WW" for black and white king
 // One line title indicates the ply count
-void print_position(const struct CheckerPosition *);
+void print_position(const ckr_pos_t *);
 
 // Print parameter as a checker move
 // Indices are translated to the format row,column (0-indexed)

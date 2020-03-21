@@ -14,8 +14,6 @@ long node_count = 0;
 int sim_count_[3], *sim_count = sim_count_ + 1;
 #endif
 
-static struct CheckerEngine eng_, *eng = &eng_;
-
 bool mcts_is_leaf(ckr_tree t)
 {
   return t->child_num <= 0;
@@ -128,7 +126,7 @@ void mcts_random_permute(int *arr, int len)
 }
 
 // Positive if lower wins, negative if upper wins, 0 if draw
-int mcts_end_game_count(const struct CheckerPosition *pos)
+int mcts_end_game_count(const ckr_pos_t *pos)
 {
   int res = ckr_popcount(pos->down) - ckr_popcount(pos->up) + 2 *
     (ckr_popcount(pos->down & pos->king) - ckr_popcount(pos->up & pos->king));
@@ -179,7 +177,7 @@ void mcts_expand(ckr_tree t)
 
 int mcts_simulate(ckr_tree t)
 {
-  struct CheckerPosition pos = t->pos;
+  ckr_pos_t pos = t->pos;
   while (pos.ply_count < 120)
   {
     ckr_parse_pos(eng, &pos);
@@ -237,7 +235,7 @@ double mcts_evaluate(ckr_tree t, int ind)
     sqrt(2 * log(mcts_rollout_num(t)) / mcts_rollout_num(child));
 }
 
-const char *mcts_extract_best(ckr_tree t)
+char *mcts_extract_best(ckr_tree t)
 {
   int best = -1;
   double best_num = 1000;
@@ -250,26 +248,20 @@ const char *mcts_extract_best(ckr_tree t)
     }
   }
 
-  const char *res = ckr_parse_move(eng, &t->pos, &mcts_get_child(t, best)->pos);
+  char *res = ckr_find_move(&t->pos, &mcts_get_child(t, best)->pos);
 
   mcts_free_except_ind(t, best);
   return res;
 }
 
-bool ckr_equal(const struct CheckerPosition *l, const struct CheckerPosition *r)
-{
-  return l->up == r->up && l->down == r->down && l->king == r->king
-    && l->ply_count == r->ply_count;
-}
-
-void mcts_free_except(ckr_tree t, const struct CheckerPosition *pos)
+void mcts_free_except(ckr_tree t, const ckr_pos_t *pos)
 {
   // Be aware of that sometimes there are identical positions
   // In that case, leave the most visited branch
   int chosen = -1;
   for (int i = 0; i < t->child_num; i++)
   {
-    if (ckr_equal(&mcts_get_child(t, i)->pos, pos))
+    if (ckr_pos_equal(&mcts_get_child(t, i)->pos, pos))
     {
       if (chosen == -1 || mcts_rollout_num(mcts_get_child(t, i)) >
         mcts_rollout_num(mcts_get_child(t, chosen)))
