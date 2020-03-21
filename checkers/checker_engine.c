@@ -8,17 +8,16 @@ extern "C" {
 #include "checker_engine.h"
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define CHECKER_ILLEGAL_SQUARE 0xAA55AA55AA55AA55ull
 #define CHECKER_LEGAL_SQUARE ~0xAA55AA55AA55AA55ull
 
-ckr_eng_t ckr_new_eng(void)
+ckr_eng_t ckr_eng_new(void)
 {
   return malloc(sizeof(struct checker_engine_t));
 }
 
-void ckr_free_eng(ckr_eng_t eng)
+void ckr_eng_free(ckr_eng_t eng)
 {
   free(eng);
 }
@@ -151,7 +150,7 @@ static inline ckr_pos_t ckr_apply_move(
 ckr_pos_t ckr_make_move(const ckr_pos_t *pos, const char *mov_str)
 {
   struct checker_move_t mov = {};
-  if (strlen(mov_str) == 2 && abs(mov_str[0] - mov_str[1]) <= 9)
+  if (mov_str[2] == 0 && abs(mov_str[0] - mov_str[1]) <= 9)
   {
     // Walk
     mov.my = 1ull << mov_str[0] | 1ull << mov_str[1];
@@ -470,11 +469,6 @@ uint64_t ckr_ls1b(uint64_t x)
 int ckr_index(uint64_t x)
 {
   return __builtin_ctzll(x);
-}
-
-int ckr_popcount(uint64_t x)
-{
-  return __builtin_popcountll(x);
 }
 
 #ifdef __cplusplus

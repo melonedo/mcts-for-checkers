@@ -1,6 +1,7 @@
 
 #include "print.h"
 #include "../checkers/checkers.h"
+#include "../mcts/tree.h"
 #include <stdio.h>
 #include <assert.h>
 int print_threshold = 100;
@@ -63,14 +64,14 @@ char *repr_move(const char *mov)
 }
 
 // Append space_num spaces before printing the tree
-void print_tree_iter(const struct CheckerTree *, int space_num, const char *move);
-void print_tree(const struct CheckerTree *t)
+void print_tree_iter(mcts_tree_t, int space_num, const char *move);
+void print_tree(mcts_tree_t t)
 {
   print_tree_iter(t, 0, "root");
   putchar('\n');
 }
 
-void print_tree_iter(const struct CheckerTree *t, int space_num, const char *move)
+void print_tree_iter(mcts_tree_t t, int space_num, const char *move)
 {
   if (space_num > 1400)
   {
@@ -148,9 +149,9 @@ void print_mem(const void *m, int len)
 
 FILE *tree_file;
 
-void dump_tree_iter(const struct CheckerTree *t, const char *move);
+void dump_tree_iter(mcts_tree_t t, const char *move);
 
-void dump_tree(const struct CheckerTree *t)
+void dump_tree(mcts_tree_t t)
 {
   printf("Dumping the tree...");
   assert(tree_file = fopen("tree.txt", "w"));
@@ -167,7 +168,7 @@ void dump_tree(const struct CheckerTree *t)
   printf("Tree dumped.\n");
 }
 
-void dump_tree_iter(const struct CheckerTree *t, const char *move)
+void dump_tree_iter(mcts_tree_t t, const char *move)
 {
   const char *type_str = NULL;
   if (t->child_num > 0)

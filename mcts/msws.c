@@ -192,7 +192,7 @@ uint64_t msws_seeds[] = {
 };
 void msws_srand(void)
 {
-  int i = 0;
+  static int i = 0;
   x = w = s = msws_seeds[i++];
 }
 #ifdef __cplusplus

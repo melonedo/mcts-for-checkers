@@ -117,9 +117,6 @@ uint64_t ckr_ls1b(uint64_t);
 // Get the index of least significant bit
 int ckr_index(uint64_t);
 
-// Population count, count 1 bits
-int ckr_popcount(uint64_t);
-
 // Shift all squares to four directions
 uint64_t ckr_radius2(uint64_t);
 

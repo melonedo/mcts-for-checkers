@@ -4,6 +4,7 @@
 #define CKR_PRINT_H_INCLUDED
 
 #include "../checkers/checkers.h"
+#include "../mcts/mcts.h"
 
 // "  " for unreachable space, ".." for reachable space,
 // "bb" and "ww" for black and white men
@@ -23,11 +24,11 @@ char *repr_move(const char *);
 // Format:
 // 500/1000 - [5,6 4,5]100/300
 //          - [3,5 3,6]200/700
-void print_tree(const struct CheckerTree *);
+void print_tree(mcts_tree_t);
 
 // Print the memory as-is
 void print_mem(const void *, int len);
 
 // Dump the tree into json (stored in tree.txt)
-void dump_tree(const struct CheckerTree *);
+void dump_tree(mcts_tree_t);
 #endif

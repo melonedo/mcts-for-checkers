@@ -27,14 +27,16 @@ ckr_pos_t ckr_starting_pos(void);
 
 // Comparison
 bool ckr_pos_equal(const ckr_pos_t *, const ckr_pos_t *);
+
+
 //====== Move generation ======
 // Opaque buffer
 struct checker_engine_t;
 typedef struct checker_engine_t *ckr_eng_t;
 
 // Allocate and free memory for a checkere engine
-ckr_eng_t ckr_new_eng(void);
-void ckr_free_eng(ckr_eng_t);
+ckr_eng_t ckr_eng_new(void);
+void ckr_eng_free(ckr_eng_t);
 
 // Set the checker engine  to examine given position, effectively, generate
 // future moves of it and store in buffer.

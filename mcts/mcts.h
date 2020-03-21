@@ -5,26 +5,30 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include "../checkers/checkers.h"
 
-struct CheckerTree;
-typedef struct CheckerTree *ckr_tree;
+struct mcts_tree_t_;
+typedef struct mcts_tree_t_ *mcts_tree_t;
 
 // Initilize the root node
 // It is allocated on the heap
-ckr_tree mcts_root(void);
+mcts_tree_t mcts_tree_new(void);
 
-// See mcts.txt
-// 1, 0, -1 for win, draw, lose each
-int mcts_rollout(ckr_tree);
+// Free the whole tree
+void mcts_tree_free(mcts_tree_t);
+
+// Do a single rollout
+int mcts_tree_rollout(mcts_tree_t);
+
+// Get the current position
+const ckr_pos_t *mcts_tree_get_pos(mcts_tree_t);
+
+// Return the game position of the best child
+const ckr_pos_t *mcts_tree_get_best(mcts_tree_t);
 
 // Deallocate the tree, leaving only the given branch
-void mcts_free_except(ckr_tree, const ckr_pos_t *);
+void mcts_tree_choose(mcts_tree_t, const ckr_pos_t *);
 
-// Return the best move serialized (in internal buffer)
-// Free other branches. Return heap memory.
-char *mcts_extract_best(ckr_tree);
-
-#include "tree.h"
 #ifdef __cplusplus
 }
 #endif
