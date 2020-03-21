@@ -1,5 +1,5 @@
 #define MCTS_DEBUG
-#define MCTS_STATIC_CKR_ENG
+// #define MCTS_STATIC_CKR_ENG
 
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
@@ -67,6 +67,7 @@ void loop(mcts_tree_t t)
 
 void place(mcts_tree_t t)
 {
+  // Read
   int len;
   fscanf(rec, "%d", &len);
   char mov[len + 1];
@@ -79,28 +80,43 @@ void place(mcts_tree_t t)
     mov[i] = 8 * row + col;
   }
 
-  printf("DEBUG X %d PLACE %d", mcts_rollout_num(t), len);
+  // Log
+  printf("DEBUG X %d PLACE", mcts_rollout_num(t));
   show_move(mov);
 
+  // Real logic
   ckr_pos_t pos = ckr_make_move(&t->pos, mov);
   mcts_tree_choose(t, &pos);
+
+  // Log again
   printf("DEBUG turn #%d %d/%d, %f%% winning\n", t->pos.ply_count,
   t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
   print_position(&t->pos);
+
+  // Done
   msws_srand();
 }
 
 void turn(mcts_tree_t t)
 {
+  // Log
   printf("DEBUG X %d TURN\n", mcts_rollout_num(t));
+
+  // Real output
   const ckr_pos_t *best_pos = mcts_tree_get_best(t);
   char *mov = ckr_find_move(mcts_tree_get_pos(t), best_pos);
   show_move(mov);
+
+  // Free everything
   free(mov);
   mcts_tree_choose(t, best_pos);
+
+  // Log again
   printf("DEBUG turn #%d %d/%d, %f%% losing\n", t->pos.ply_count,
   t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
   print_position(&t->pos);
+
+  // Done
   msws_srand();
 }
 

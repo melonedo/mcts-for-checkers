@@ -2,11 +2,9 @@
 files = [
     'checkers/checkers.h',
     'checkers/checker_engine.h',
-    'checkers/checker_util.h',
     'mcts/mcts.h',
     'mcts/tree.h',
     'mcts/msws.h',
-    'checkers/checker_util.c',
     'checkers/checker_engine.c',
     'mcts/tree.c',
     'mcts/msws.c',
@@ -14,7 +12,7 @@ files = [
 outfile = 'combined.c'
 preamble = """/*
  * This file is automatically combined to be submitted to oj.
- * From my repo:
+ * Also on my repo
  * https://github.com/melonedo/mcts-for-checkers
  */\n\n\n
 """

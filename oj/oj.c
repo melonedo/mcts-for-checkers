@@ -1,13 +1,15 @@
+// #define MCTS_STATIC_CKR_ENG
 
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
-#include "../test/print.h"
-#include "../mcts/msws.h"
-#include "../checkers/checker_util.c"
-#include "../checkers/checker_engine.c"
-#include "../test/print.c"
-#include "../mcts/tree.c"
+
+#ifdef MCTS_STATIC_CKR_ENG
+ckr_eng_t eng;
+#endif
+
 #include "../mcts/msws.c"
+#include "../checkers/checker_engine.c"
+#include "../mcts/tree.c"
 
 #include <time.h>
 #include <stdbool.h>
@@ -21,24 +23,31 @@ pthread_t search_thread;
 pthread_mutex_t game_tree_mutex;
 bool game_ended = false;
 
-void loop(struct CheckerTree *);
-void start(struct CheckerTree *);
-void place(struct CheckerTree *);
-void turn(struct CheckerTree *);
-void end(struct CheckerTree *);
+void loop(mcts_tree_t);
+void start(mcts_tree_t);
+void place(mcts_tree_t);
+void turn(mcts_tree_t);
+void end(mcts_tree_t);
 // Search the tree
 void *search(void *);
 
+// Print the move string
+void show_move(const char *);
+
 int main()
 {
-  msws_srand();
-  struct CheckerTree *root = mcts_root();
-  pthread_mutex_init(&game_tree_mutex, NULL);
-  pthread_create(&search_thread, NULL, search, root);
-  loop(root);
+  #ifdef MCTS_STATIC_CKR_ENG
+    printf("DEBUG Using static checker engine.\n");
+    eng = ckr_eng_new();
+  #endif
+    msws_srand();
+    mcts_tree_t root = mcts_tree_new();
+    pthread_mutex_init(&game_tree_mutex, NULL);
+    pthread_create(&search_thread, NULL, search, root);
+    loop(root);
 }
 
-void loop(struct CheckerTree *t)
+void loop(mcts_tree_t t)
 {
   while (true)
   {
@@ -64,39 +73,40 @@ void loop(struct CheckerTree *t)
   }
 }
 
-void place(struct CheckerTree *t)
+void place(mcts_tree_t t)
 {
+  // Read
   int len;
   scanf("%d", &len);
   char mov[len + 1];
   mov[len] = 0;
+
   for (int i = 0; i < len; i++)
   {
     int row, col;
     scanf("%d,%d", &row, &col);
     mov[i] = 8 * row + col;
   }
-  static struct CheckerEngine eng_, *eng = &eng_;
 
   pthread_mutex_lock(&game_tree_mutex);
-  // Record
-  printf("DEBUG X %d PLACE %d", mcts_rollout_num(t), len);
-  for (int i = 0; mov[i]; i++)
-    printf(" %d,%d", mov[i] / 8, mov[i] % 8);
-  putchar('\n');
+  // Log
+  printf("DEBUG X %d PLACE ", mcts_rollout_num(t));
+  show_move(mov);
 
-  struct CheckerPosition pos = ckr_make_move(eng, &t->pos, mov);
-  mcts_free_except(t, &pos);
+  // Real logic
+  ckr_pos_t pos = ckr_make_move(&t->pos, mov);
+  mcts_tree_choose(t, &pos);
 
-  // Print result for checking
+  // Log again
   printf("DEBUG turn #%d %d/%d, %f%% winning\n", t->pos.ply_count,
   t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
 
+  // Done
   msws_srand();
   pthread_mutex_unlock(&game_tree_mutex);
 }
 
-void turn(struct CheckerTree *t)
+void turn(mcts_tree_t t)
 {
   // Do not explicitly search, simply wait
   clock_t end = clock(), start = end;
@@ -114,33 +124,39 @@ void turn(struct CheckerTree *t)
   }
 
   pthread_mutex_lock(&game_tree_mutex);
-  // Record
+  // Log
   printf("DEBUG X %d TURN\n", mcts_rollout_num(t));
 
-  const char *mov = mcts_extract_best(t);
-  printf("DEBUG %ldms\n", clock() - start);
-  printf("%d", strlen(mov));
-  for (int i = 0; mov[i]; i++)
-    printf(" %d,%d", mov[i] / 8, mov[i] % 8);
-  putchar('\n');
-
-  // Print result
-  printf("DEBUG turn #%d %d/%d, %f%% losing\n", t->pos.ply_count,
-  t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
+  // Real output
+  const ckr_pos_t *best_pos = mcts_tree_get_best(t);
+  char *mov = ckr_find_move(mcts_tree_get_pos(t), best_pos);
+  show_move(mov);
   fflush(stdout);
 
+  // Free everything
+  free(mov);
+  mcts_tree_choose(t, best_pos);
+
+  // Log again
+  printf("DEBUG turn #%d %ldms, %d/%d, %f%% losing\n",
+    t->pos.ply_count, clock() - start,
+    t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
+
+  // Done
   msws_srand();
   pthread_mutex_unlock(&game_tree_mutex);
 }
 
-void start(struct CheckerTree *t)
+void start(mcts_tree_t t)
 {
   pthread_mutex_lock(&game_tree_mutex);
+  // Explicitly search for a few times
   int num = 100;
   while (num--)
   {
-    mcts_rollout(t);
+    mcts_tree_rollout(t);
   }
+
   scanf("%*d");
   printf("OK\n");
   fflush(stdout);
@@ -149,21 +165,20 @@ void start(struct CheckerTree *t)
 
 void *search(void *t)
 {
-  struct CheckerTree *tree = t;
   const int pack_size = 10;
   while (!game_ended)
   {
     // Executed in packs to avoid large overhead locking and unlocking
     pthread_mutex_lock(&game_tree_mutex);
     for (int i = 0; i < pack_size; i++)
-      mcts_rollout(tree);
+      mcts_tree_rollout(t);
     pthread_mutex_unlock(&game_tree_mutex);
   }
   pthread_exit(NULL);
   __builtin_unreachable();
 }
 
-void end(struct CheckerTree *t)
+void end(mcts_tree_t t)
 {
   // End the searcher thread
   game_ended = true;
@@ -175,7 +190,14 @@ void end(struct CheckerTree *t)
   pthread_mutex_destroy(&game_tree_mutex);
 
   // Free the tree
-  mcts_free(t);
-  free(t);
+  mcts_tree_free(t);
   printf("DEBUG game ended.\n");
+}
+
+void show_move(const char *mov)
+{
+  printf("%d", strlen(mov));
+  for (int i = 0; mov[i]; i++)
+    printf(" %d,%d", mov[i] / 8, mov[i] % 8);
+  putchar('\n');
 }
