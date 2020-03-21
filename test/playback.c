@@ -1,13 +1,9 @@
 #define MCTS_DEBUG
-// #define MCTS_STATIC_CKR_ENG
+#define MCTS_BK_POPCOUNT
 
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
 #include "../test/print.h"
-
-#ifdef MCTS_STATIC_CKR_ENG
-ckr_eng_t eng;
-#endif
 
 #include "../mcts/msws.c"
 #include "../checkers/checker_engine.c"
@@ -29,10 +25,6 @@ void show_move(const char *);
 FILE *rec;
 int main()
 {
-#ifdef MCTS_STATIC_CKR_ENG
-  printf("Using static checker engine.\n");
-  eng = ckr_eng_new();
-#endif
   msws_srand();
   mcts_tree_t root = mcts_tree_new();
   assert(rec = fopen("../test/record.txt", "r"));
@@ -81,7 +73,7 @@ void place(mcts_tree_t t)
   }
 
   // Log
-  printf("DEBUG X %d PLACE", mcts_rollout_num(t));
+  printf("DEBUG X %d PLACE ", mcts_rollout_num(t));
   show_move(mov);
 
   // Real logic
@@ -90,8 +82,10 @@ void place(mcts_tree_t t)
 
   // Log again
   printf("DEBUG turn #%d %d/%d, %f%% winning\n", t->pos.ply_count,
-  t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
+    t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
   print_position(&t->pos);
+  print_threshold = t->total_num / 40;
+  print_tree(t);
 
   // Done
   msws_srand();
@@ -113,8 +107,10 @@ void turn(mcts_tree_t t)
 
   // Log again
   printf("DEBUG turn #%d %d/%d, %f%% losing\n", t->pos.ply_count,
-  t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
+    t->win_num, t->total_num / 2, 100.0 * t->win_num / t->total_num);
   print_position(&t->pos);
+  print_threshold = t->total_num / 40;
+  print_tree(t);
 
   // Done
   msws_srand();
@@ -127,13 +123,16 @@ void wait(mcts_tree_t t)
   fscanf(rec, "%d", &end_num);
   printf("X %d\n", end_num);
   sim_count[0] = sim_count[-1] = sim_count[1] = 0;
+  int rollout_count = 0;
   while (mcts_rollout_num(t) < end_num)
   {
+    rollout_count++;
     mcts_tree_rollout(t);
   }
   printf("W: %d D: %d B: %d\n", sim_count[-1], sim_count[0], sim_count[1]);
   // if (t->pos.ply_count == 55) dump_tree(t);
-  printf("%ldms, %ld,%04ld nodes in total (%.2fMB).\n", clock() - start_time,
+  printf("%d rollouts, %ldms, %ld,%04ld nodes in total (%.2fMB).\n",
+    rollout_count, clock() - start_time,
     node_count / 10000, node_count % 10000,
     sizeof(*t) * node_count / 1e6);
 }

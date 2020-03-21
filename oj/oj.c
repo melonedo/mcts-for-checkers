@@ -1,12 +1,7 @@
-// #define MCTS_STATIC_CKR_ENG
+#define MCTS_BK_POPCOUNT
 
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"
-
-#ifdef MCTS_STATIC_CKR_ENG
-ckr_eng_t eng;
-#endif
-
 #include "../mcts/msws.c"
 #include "../checkers/checker_engine.c"
 #include "../mcts/tree.c"
@@ -36,15 +31,11 @@ void show_move(const char *);
 
 int main()
 {
-  #ifdef MCTS_STATIC_CKR_ENG
-    printf("DEBUG Using static checker engine.\n");
-    eng = ckr_eng_new();
-  #endif
-    msws_srand();
-    mcts_tree_t root = mcts_tree_new();
-    pthread_mutex_init(&game_tree_mutex, NULL);
-    pthread_create(&search_thread, NULL, search, root);
-    loop(root);
+  msws_srand();
+  mcts_tree_t root = mcts_tree_new();
+  pthread_mutex_init(&game_tree_mutex, NULL);
+  pthread_create(&search_thread, NULL, search, root);
+  loop(root);
 }
 
 void loop(mcts_tree_t t)
@@ -89,6 +80,7 @@ void place(mcts_tree_t t)
   }
 
   pthread_mutex_lock(&game_tree_mutex);
+
   // Log
   printf("DEBUG X %d PLACE ", mcts_rollout_num(t));
   show_move(mov);
@@ -124,6 +116,7 @@ void turn(mcts_tree_t t)
   }
 
   pthread_mutex_lock(&game_tree_mutex);
+
   // Log
   printf("DEBUG X %d TURN\n", mcts_rollout_num(t));
 
@@ -150,6 +143,7 @@ void turn(mcts_tree_t t)
 void start(mcts_tree_t t)
 {
   pthread_mutex_lock(&game_tree_mutex);
+
   // Explicitly search for a few times
   int num = 100;
   while (num--)
