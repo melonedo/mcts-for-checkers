@@ -18,6 +18,8 @@ mcts_tree_t mcts_tree_new(void);
 void mcts_tree_free(mcts_tree_t);
 
 // Do a single rollout
+// A dispatch function, recursively chooses the matching behavior depend on the
+// type of node.
 int mcts_tree_rollout(mcts_tree_t);
 
 // Get the current position

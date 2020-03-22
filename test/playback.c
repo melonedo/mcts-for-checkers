@@ -1,5 +1,7 @@
 #define MCTS_DEBUG
 #define MCTS_BK_POPCOUNT
+#include <stdio.h>
+#include <inttypes.h>
 
 #include "../checkers/checkers.h"
 #include "../mcts/mcts.h"

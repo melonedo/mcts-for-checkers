@@ -285,8 +285,8 @@ void ckr_gen_jump_iter(ckr_eng_t eng, int len, uint64_t piece, uint64_t opn)
   // Examine the four directions one by one
   _CKR_GEN_JUMP_ITER(dl);
   _CKR_GEN_JUMP_ITER(dr);
-  _CKR_GEN_JUMP_ITER(ul);
   _CKR_GEN_JUMP_ITER(ur);
+  _CKR_GEN_JUMP_ITER(ul);
 }
 #undef _CKR_GEN_JUMP_ITER
 
@@ -306,8 +306,8 @@ void ckr_gen_single_jump(ckr_eng_t eng)
 {
   _CKR_GEN_SINGLE_JUMP(dl);
   _CKR_GEN_SINGLE_JUMP(dr);
-  _CKR_GEN_SINGLE_JUMP(ul);
   _CKR_GEN_SINGLE_JUMP(ur);
+  _CKR_GEN_SINGLE_JUMP(ul);
 }
 #undef _CKR_GEN_SINGLE_JUMP
 
@@ -330,8 +330,8 @@ void ckr_gen_up_walk(ckr_eng_t eng, uint64_t pieces)
 
 void ckr_gen_down_walk(ckr_eng_t eng, uint64_t pieces)
 {
-  _CKR_GEN_WALK(dr, ul);
   _CKR_GEN_WALK(dl, ur);
+  _CKR_GEN_WALK(dr, ul);
 }
 #undef _CKR_GEN_WALK
 

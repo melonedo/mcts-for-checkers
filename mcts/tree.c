@@ -114,6 +114,13 @@ int mcts_tree_rollout(mcts_tree_t t)
       res = mcts_retrive(t);
       break;
 
+      case MCTS_END_GAME_NEW:
+      t->child_num = MCTS_END_GAME;
+      res = mcts_retrive(t);
+      // Will be set back soon
+      t->win_num = 0;
+      break;
+
       default:
       assert(0);
     }
@@ -181,7 +188,7 @@ void mcts_expand(mcts_tree_t t)
     ckr_eng_free(eng);
   }
   int res = mcts_end_game_count(&t->pos);
-  t->child_num = MCTS_END_GAME;
+  t->child_num = MCTS_END_GAME_NEW;
   t->total_num = 0;
   t->win_num = t->pos.ply_count % 2 != 0 ? -res : res;
 }

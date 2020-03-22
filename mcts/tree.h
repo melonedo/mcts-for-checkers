@@ -26,7 +26,9 @@ enum CheckerLeafType
   // Evaluated once, call mcts_expand
   MCTS_OLD_LEAF = -1,
   // Ends the game decisively, and already evaluated, call mstd_retrive
-  MCTS_END_GAME = -2
+  MCTS_END_GAME = -2,
+  // The same as MCTS_END_GAME, newly generated
+  MCTS_END_GAME_NEW = -3
 };
 
 
